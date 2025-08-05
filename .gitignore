@@ -1,0 +1,8 @@
+build/
+.idea/
+*.iml
+*.log
+*.tmp
+.env
+env.conf
+conf.env.ini
