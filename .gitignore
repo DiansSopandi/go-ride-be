@@ -1,8 +1,10 @@
 build/
+tmp/
 .idea/
 *.iml
 *.log
 *.tmp
+.DS_Store
 .env
 env.conf
 conf.env.ini
