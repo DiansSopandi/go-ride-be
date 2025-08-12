@@ -3,11 +3,11 @@ package handler
 import (
 	"database/sql"
 	"fmt"
-	"log"
 
 	"github.com/DiansSopandi/goride_be/dto"
 	"github.com/DiansSopandi/goride_be/middlewares"
 	model "github.com/DiansSopandi/goride_be/models"
+	"github.com/DiansSopandi/goride_be/pkg"
 	helper "github.com/DiansSopandi/goride_be/pkg/helper"
 	"github.com/DiansSopandi/goride_be/pkg/utils"
 	"github.com/DiansSopandi/goride_be/repository"
@@ -41,26 +41,17 @@ func CreateUserHandler(handler *UserHandler) fiber.Handler {
 		var createUserDto dto.UserCreateRequest
 
 		if err := c.BodyParser(&createUserDto); err != nil {
-			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-				"message": err.Error(),
-				"status":  fiber.StatusBadRequest,
-				"data":    nil,
-			})
+			return pkg.ResponseApiErrorBadRequest(c, fmt.Sprintf("Failed to parse request body: %v", err))
 		}
 
 		if err := helper.ValidateCreateUserRequest(&createUserDto); err != nil {
-			log.Printf("Validation error: %v", err)
-			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-				"message": "Validation failed",
-				"status":  fiber.StatusBadRequest,
-				"data":    nil,
-				"error":   err.Error(),
-			})
+			return pkg.ResponseApiErrorBadRequest(c, fmt.Sprintf("Validation failed: %v", err))
 		}
 
 		res, err := handler.CreateUser(c, &createUserDto)
 
 		if err != nil {
+			// return pkg.ResponseApiErrorInternalServer(c, fmt.Sprintf("Failed to create user: %v", err))
 			return fiber.NewError(fiber.StatusInternalServerError, err.Error())
 			// return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			// 	"message": err.Error(),
@@ -69,12 +60,7 @@ func CreateUserHandler(handler *UserHandler) fiber.Handler {
 			// })
 		}
 
-		return c.Status(fiber.StatusOK).JSON(fiber.Map{
-			"message": "User created...",
-			"status":  fiber.StatusOK,
-			"success": true,
-			"data":    res,
-		})
+		return pkg.ResponseApiOK(c, "User created successfully", res)
 	}
 }
 
@@ -83,19 +69,10 @@ func GetUserHandler(handler *UserHandler) fiber.Handler {
 		res, err := handler.GetUser()
 
 		if err != nil {
-			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-				"message": err.Error(),
-				"status":  fiber.StatusInternalServerError,
-				"success": false,
-				"data":    nil,
-			})
+			return pkg.ResponseApiErrorInternalServer(c, fmt.Sprintf("Failed to fetch users: %v", err))
 		}
-		return c.JSON(fiber.Map{
-			"message": "User fetch successfuly...",
-			"status":  fiber.StatusOK,
-			"success": true,
-			"data":    res,
-		})
+
+		return pkg.ResponseApiOK(c, "User fetch successfully", res)
 	}
 }
 

@@ -1,7 +1,10 @@
 package middlewares
 
 import (
-	"github.com/DiansSopandi/goride_be/pkg/db"
+	"fmt"
+
+	"github.com/DiansSopandi/goride_be/db"
+	"github.com/DiansSopandi/goride_be/pkg"
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -33,25 +36,27 @@ func WithTransaction(handler fiber.Handler) fiber.Handler {
 		if err != nil {
 			// Rollback jika ada error
 			db.RollbackOnError(tx, err)
-			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-				"message": "failed to commit transaction", // fmt.Sprintf("Failed to commit transaction: %v", err),
-				"status":  fiber.StatusInternalServerError,
-				"success": false,
-				"error":   err.Error(),
-				"data":    nil,
-			})
+			return pkg.ResponseApiErrorInternalServer(c, fmt.Sprintf("transaction rolled back due to: %v", err))
+			// return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			// 	"message": "failed to commit transaction", // fmt.Sprintf("Failed to commit transaction: %v", err),
+			// 	"status":  fiber.StatusInternalServerError,
+			// 	"success": false,
+			// 	"error":   err,
+			// 	"data":    nil,
+			// })
 		}
 
 		// Commit transaksi jika sukses
 		if tx != nil {
 			if err := tx.Commit(); err != nil {
-				return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-					"message": "failed to commit transaction", // fmt.Sprintf("Failed to commit transaction: %v", err),
-					"status":  fiber.StatusInternalServerError,
-					"success": false,
-					"error":   err.Error(),
-					"data":    nil,
-				})
+				return pkg.ResponseApiErrorInternalServer(c, fmt.Sprintf("Failed to commit transaction: %v", err))
+				// return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+				// 	"message": "failed to commit transaction", // fmt.Sprintf("Failed to commit transaction: %v", err),
+				// 	"status":  fiber.StatusInternalServerError,
+				// 	"success": false,
+				// 	"error":   err.Error(),
+				// 	"data":    nil,
+				// })
 			}
 		}
 

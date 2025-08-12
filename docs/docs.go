@@ -190,7 +190,7 @@ const docTemplate = `{
                 },
                 "password": {
                     "type": "string",
-                    "example": "password123"
+                    "example": "Cilok99!@"
                 },
                 "roles": {
                     "description": "multiple roles",

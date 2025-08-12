@@ -118,22 +118,64 @@ func validatePassword(password string) error {
 
 func checkWeakPatterns(password string) error {
 	// Check for sequential characters (123, abc, etc.)
-	sequential := regexp.MustCompile(`(?i)(123|234|345|456|567|678|789|890|abc|bcd|cde|def|efg|fgh|ghi|hij|ijk|jkl|klm|lmn|mno|nop|opq|pqr|qrs|rst|stu|tuv|uvw|vwx|wxy|xyz)`)
-	if sequential.MatchString(password) {
-		return fmt.Errorf("password should not contain sequential characters")
+	// sequential := regexp.MustCompile(`(?i)(123|234|345|456|567|678|789|890|abc|bcd|cde|def|efg|fgh|ghi|hij|ijk|jkl|klm|lmn|mno|nop|opq|pqr|qrs|rst|stu|tuv|uvw|vwx|wxy|xyz)`)
+	// if sequential.MatchString(password) {
+	// 	return fmt.Errorf("password should not contain sequential characters")
+	// }
+	// Check for sequential numbers (longer sequences)
+	sequentialNumbers := regexp.MustCompile(`(012|123|234|345|456|567|678|789|890|901)`)
+	if sequentialNumbers.MatchString(password) {
+		return fmt.Errorf("password should not contain sequential numbers")
 	}
 
-	// Check for repeated characters (aaa, 111, etc.)
-	repeated := regexp.MustCompile(`(.)\1{2,}`)
-	if repeated.MatchString(password) {
+	// Check for sequential letters (case insensitive)
+	sequentialLetters := regexp.MustCompile(`(?i)(abc|bcd|cde|def|efg|fgh|ghi|hij|ijk|jkl|klm|lmn|mno|nop|opq|pqr|qrs|rst|stu|tuv|uvw|vwx|wxy|xyz)`)
+	if sequentialLetters.MatchString(password) {
+		return fmt.Errorf("password should not contain sequential letters")
+	}
+
+	// Check for keyboard patterns
+	keyboardPatterns := regexp.MustCompile(`(?i)(qwerty|asdf|zxcv|qwer|asdf|zxcv|1234|4321)`)
+	if keyboardPatterns.MatchString(password) {
+		return fmt.Errorf("password should not contain keyboard patterns")
+	}
+
+	// Check for repeated characters (3 or more)
+	if hasRepeatedChars(password, 3) {
 		return fmt.Errorf("password should not contain more than 2 consecutive identical characters")
 	}
 
 	// Check for common weak passwords
 	commonPasswords := []string{
-		"password", "12345678", "qwerty", "abc123",
-		"password123", "admin123", "welcome123",
+		"password", "12345678", "qwerty", "abc123", "letmein",
+		"password123", "admin123", "welcome123", "monkey",
+		"dragon", "sunshine", "iloveyou", "trustno1",
 	}
+
+	passwordLower := strings.ToLower(password)
+	for _, common := range commonPasswords {
+		if strings.Contains(passwordLower, strings.ToLower(common)) {
+			return fmt.Errorf("password contains common weak pattern: %s", common)
+		}
+	}
+
+	// Check for all numbers
+	allNumbers := regexp.MustCompile(`^\d+$`)
+	if allNumbers.MatchString(password) {
+		return fmt.Errorf("password should not contain only numbers")
+	}
+
+	// Check for all letters
+	allLetters := regexp.MustCompile(`^[a-zA-Z]+$`)
+	if allLetters.MatchString(password) {
+		return fmt.Errorf("password should contain numbers or special characters")
+	}
+
+	// Check for repeated characters (aaa, 111, etc.)
+	// repeated := regexp.MustCompile(`(.)\1{2,}`)
+	// if repeated.MatchString(password) {
+	// 	return fmt.Errorf("password should not contain more than 2 consecutive identical characters")
+	// }
 
 	for _, common := range commonPasswords {
 		if matched, _ := regexp.MatchString(`(?i)`+regexp.QuoteMeta(common), password); matched {
@@ -162,4 +204,45 @@ func validatePasswordWithRegex(password string) error {
 	}
 
 	return nil
+}
+
+// Custom function to check repeated characters
+func hasRepeatedChars(s string, maxRepeat int) bool {
+	if len(s) < maxRepeat {
+		return false
+	}
+
+	count := 1
+	for i := 1; i < len(s); i++ {
+		if s[i] == s[i-1] {
+			count++
+			if count >= maxRepeat {
+				return true
+			}
+		} else {
+			count = 1
+		}
+	}
+	return false
+}
+
+// Alternative: More comprehensive repeated character check
+func hasRepeatedCharsAdvanced(password string, maxRepeat int) bool {
+	runes := []rune(password)
+	if len(runes) < maxRepeat {
+		return false
+	}
+
+	count := 1
+	for i := 1; i < len(runes); i++ {
+		if runes[i] == runes[i-1] {
+			count++
+			if count >= maxRepeat {
+				return true
+			}
+		} else {
+			count = 1
+		}
+	}
+	return false
 }

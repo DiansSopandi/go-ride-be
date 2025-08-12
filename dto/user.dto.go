@@ -5,7 +5,7 @@ import "time"
 type UserCreateRequest struct {
 	Username string   `json:"username" example:"John Doe"`
 	Email    string   `json:"email" example:"Q2Sb9@example.com"`
-	Password string   `json:"password" example:"password123"`
+	Password string   `json:"password" example:"Cilok99!@"`
 	Roles    []string `json:"roles" example:"user,admin"` // multiple roles
 	// AvatarUrl  string `json:"avatarUrl" db:"avatar_url"`
 	// AvatarName string `json:"avatarName" db:"avatar_name"`

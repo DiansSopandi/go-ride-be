@@ -1,11 +1,10 @@
-package db
+package pkg
 
 import (
 	"database/sql"
 	"fmt"
 	"log"
 
-	"github.com/DiansSopandi/goride_be/pkg"
 	_ "github.com/lib/pq"
 )
 
@@ -17,11 +16,11 @@ func Connect() *sql.DB {
 	// password := os.Getenv("DB_PASSWORD")
 	// dbname := os.Getenv("DB_NAME")
 
-	host := pkg.Cfg.Database.Host
-	port := pkg.Cfg.Database.Port
-	user := pkg.Cfg.Database.User
-	password := pkg.Cfg.Database.Password
-	dbname := pkg.Cfg.Database.DBName
+	host := Cfg.Database.Host
+	port := Cfg.Database.Port
+	user := Cfg.Database.User
+	password := Cfg.Database.Password
+	dbname := Cfg.Database.DBName
 
 	// Buat connection string
 	connStr := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
@@ -41,11 +40,11 @@ func Connect() *sql.DB {
 }
 
 func CreateDatabaseIfNotExists() {
-	host := pkg.GetEnv("DB_HOST")
-	port := pkg.GetEnv("DB_PORT")
-	user := pkg.GetEnv("DB_USER")
-	password := pkg.GetEnv("DB_PASSWORD")
-	dbname := pkg.GetEnv("DB_NAME")
+	host := GetEnv("DB_HOST")
+	port := GetEnv("DB_PORT")
+	user := GetEnv("DB_USER")
+	password := GetEnv("DB_PASSWORD")
+	dbname := GetEnv("DB_NAME")
 
 	// Connect to postgres database (default database)
 	connStr := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=postgres sslmode=disable",
@@ -64,7 +63,7 @@ func CreateDatabaseIfNotExists() {
 
 	err = db.QueryRow(query, dbname).Scan(&exists)
 	if err != nil {
-		log.Fatalf("Error checking if database exists: %v", err)
+		log.Fatalf("Error checking if database exists postgres: %v", err)
 	}
 
 	if !exists {

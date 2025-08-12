@@ -15,37 +15,6 @@ var (
 	once       sync.Once
 )
 
-func Connect() *sql.DB {
-	// Baca dari environment variables
-	// host := os.Getenv("DB_HOST")
-	// port := os.Getenv("DB_PORT")
-	// user := os.Getenv("DB_USER")
-	// password := os.Getenv("DB_PASSWORD")
-	// dbname := os.Getenv("DB_NAME")
-	host := pkg.Cfg.Database.Host
-	port := pkg.Cfg.Database.Port
-	user := pkg.Cfg.Database.User
-	password := pkg.Cfg.Database.Password
-	dbname := pkg.Cfg.Database.DBName
-
-	// Buat connection string
-	connStr := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
-		host, port, user, password, dbname)
-
-	db, err := sql.Open("postgres", connStr)
-	if err != nil {
-		log.Fatalf("Error connecting to the database: %v", err)
-	}
-
-	err = db.Ping()
-	if err != nil {
-		log.Fatalf("Error pinging the database: %v", err)
-	}
-	fmt.Println("🔌 Connecting to PostgreSQL...")
-
-	return db
-}
-
 func CreateDatabaseIfNotExists() {
 	// host := pkg.GetEnv("DB_HOST")
 	// port := pkg.GetEnv("DB_PORT")
@@ -75,7 +44,7 @@ func CreateDatabaseIfNotExists() {
 
 	err = db.QueryRow(query, dbname).Scan(&exists)
 	if err != nil {
-		log.Fatalf("Error checking if database exists: %v", err)
+		log.Fatalf("Error checking if database exists connection: %v", err)
 	}
 
 	if !exists {
@@ -87,6 +56,37 @@ func CreateDatabaseIfNotExists() {
 		}
 		log.Printf("Database '%s' created successfully", dbname)
 	}
+}
+
+func Connect() *sql.DB {
+	// Baca dari environment variables
+	// host := os.Getenv("DB_HOST")
+	// port := os.Getenv("DB_PORT")
+	// user := os.Getenv("DB_USER")
+	// password := os.Getenv("DB_PASSWORD")
+	// dbname := os.Getenv("DB_NAME")
+	host := pkg.Cfg.Database.Host
+	port := pkg.Cfg.Database.Port
+	user := pkg.Cfg.Database.User
+	password := pkg.Cfg.Database.Password
+	dbname := pkg.Cfg.Database.DBName
+
+	// Buat connection string
+	connStr := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
+		host, port, user, password, dbname)
+
+	db, err := sql.Open("postgres", connStr)
+	if err != nil {
+		log.Fatalf("Error connecting to the database: %v", err)
+	}
+
+	err = db.Ping()
+	if err != nil {
+		log.Fatalf("Error pinging the database: %v", err)
+	}
+	fmt.Println("🔌 Connecting to PostgreSQL...")
+
+	return db
 }
 
 // InitDatabase initializes database (create if not exists and connect)

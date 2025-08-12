@@ -2,6 +2,7 @@ package pkg
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"os"
 	"strconv"
@@ -14,7 +15,11 @@ import (
 
 func sanitizeSensitiveData(bytes []byte) string {
 	var dataParse = make(map[string]interface{})
-	_ = json.Unmarshal(bytes, &dataParse)
+	err := json.Unmarshal(bytes, &dataParse)
+
+	if err != nil {
+		return "null"
+	}
 
 	// if dataParse["email"] != nil {
 	// 	dataParse["email"] = "*****"
@@ -65,77 +70,165 @@ func getIp(c *fiber.Ctx) string {
 	return ip
 }
 
-func CreateAccessLog(ctx *fiber.Ctx, ptr string, statusCode int, resp any) {
+// func CreateAccessLog(ctx *fiber.Ctx, ptr string, statusCode int, resp any) {
 
-	if Cfg.Application.EnableLog {
-		logFormat := ptr +
-			" " +
-			time.Now().Format("2006/01/02 15:04:05") +
-			" " +
-			getIp(ctx) +
-			" " +
-			ctx.Method() +
-			" " +
-			strconv.Itoa(statusCode) +
-			" " +
-			"CONTENT_TYPE=" + string(ctx.Request().Header.ContentType()) +
-			" " +
-			"ROUTE=" + ctx.Route().Path
+// 	if Cfg.Application.EnableLog {
+// 		logFormat := ptr +
+// 			" " +
+// 			time.Now().Format("2006/01/02 15:04:05") +
+// 			" " +
+// 			getIp(ctx) +
+// 			" " +
+// 			ctx.Method() +
+// 			" " +
+// 			strconv.Itoa(statusCode) +
+// 			" " +
+// 			"CONTENT_TYPE=" + string(ctx.Request().Header.ContentType()) +
+// 			" " +
+// 			"ROUTE=" + ctx.Route().Path
 
-		if ctx.Request().URI().QueryString() != nil {
-			logFormat = logFormat + " QUERY_URL=" + string(ctx.Request().URI().QueryString())
-		}
+// 		if ctx.Request().URI().QueryString() != nil {
+// 			logFormat = logFormat + " QUERY_URL=" + string(ctx.Request().URI().QueryString())
+// 		}
 
-		if ctx.Body() != nil {
-			body := string(ctx.Request().Body())
+// 		if ctx.Body() != nil {
+// 			body := string(ctx.Request().Body())
 
-			helper := make(map[string]interface{})
+// 			helper := make(map[string]interface{})
 
-			err := json.Unmarshal([]byte(body), &helper)
-			if err == nil {
-				bytes, err := json.Marshal(helper)
-				if err == nil {
-					// Sanitize some input body
-					var dataSanitize = sanitizeSensitiveData(bytes)
-					logFormat = logFormat + " PAYLOAD=" + dataSanitize
-				}
-			}
-		}
+// 			err := json.Unmarshal([]byte(body), &helper)
+// 			if err == nil {
+// 				bytes, err := json.Marshal(helper)
+// 				if err == nil {
+// 					// Sanitize some input body
+// 					var dataSanitize = sanitizeSensitiveData(bytes)
+// 					logFormat = logFormat + " PAYLOAD=" + dataSanitize
+// 				}
+// 			}
+// 		}
 
-		bytes, err := json.Marshal(resp)
-		if err == nil {
-			var dataSanitize = sanitizeSensitiveData(bytes)
-			if dataSanitize != "null" {
-				logFormat = logFormat + " RESPONSE=" + dataSanitize
-			}
-		}
+// 		bytes, err := json.Marshal(resp)
+// 		if err == nil {
+// 			var dataSanitize = sanitizeSensitiveData(bytes)
+// 			if dataSanitize != "null" {
+// 				logFormat = logFormat + " RESPONSE=" + dataSanitize
+// 			}
+// 		}
 
-		// Kalo misalnya ada cookie tambahin
-		executor := ctx.Cookies("cms_email", "")
-		if executor != "" {
-			logFormat = logFormat + " EXECUTOR=" + executor
-		}
-		// if ctx.Cookie() {
-		// extract jwt
-		// logFormat = logFormat + " EXECUTOR=" + email_executor
-		// }
+// 		// Kalo misalnya ada cookie tambahin
+// 		executor := ctx.Cookies("cms_email", "")
+// 		if executor != "" {
+// 			logFormat = logFormat + " EXECUTOR=" + executor
+// 		}
+// 		// if ctx.Cookie() {
+// 		// extract jwt
+// 		// logFormat = logFormat + " EXECUTOR=" + email_executor
+// 		// }
 
-		if Cfg.Application.EnableLogToFile {
-			// Write log to file
-			go func() {
-				f, err := os.OpenFile(Cfg.Application.LogPath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-				if err != nil {
-					log.Println(err)
-				}
+// 		if Cfg.Application.EnableLogToFile {
+// 			// Write log to file
+// 			go func() {
+// 				f, err := os.OpenFile(Cfg.Application.LogPath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+// 				if err != nil {
+// 					log.Println(err)
+// 				}
 
-				defer f.Close()
+// 				defer f.Close()
 
-				if _, err := f.WriteString(logFormat + "\n"); err != nil {
-					log.Println(err)
-				}
-			}()
-		}
+// 				if _, err := f.WriteString(logFormat + "\n"); err != nil {
+// 					log.Println(err)
+// 				}
+// 			}()
+// 		}
 
-		color.Magenta(logFormat)
+//			color.Magenta(logFormat)
+//		}
+//	}
+func buildLogFormat(ctx *fiber.Ctx, ptr string, statusCode int) string {
+	logFormat := ptr +
+		" " +
+		time.Now().Format("2006/01/02 15:04:05") +
+		" " +
+		getIp(ctx) +
+		" " +
+		ctx.Method() +
+		" " +
+		strconv.Itoa(statusCode) +
+		" " +
+		"CONTENT_TYPE=" + string(ctx.Request().Header.ContentType()) +
+		" " +
+		"ROUTE=" + ctx.Route().Path
+
+	if ctx.Request().URI().QueryString() != nil {
+		logFormat = logFormat + " QUERY_URL=" + string(ctx.Request().URI().QueryString())
 	}
+	return logFormat
+}
+
+func appendPayload(ctx *fiber.Ctx, logFormat string) string {
+	if ctx.Body() != nil {
+		body := string(ctx.Request().Body())
+		helper := make(map[string]interface{})
+		err := json.Unmarshal([]byte(body), &helper)
+		if err == nil {
+			bytes, err := json.Marshal(helper)
+			if err == nil {
+				var dataSanitize = sanitizeSensitiveData(bytes)
+				logFormat = logFormat + " PAYLOAD=" + dataSanitize
+			}
+		}
+	}
+	return logFormat
+}
+
+func appendResponse(resp any, logFormat string) string {
+	bytes, err := json.Marshal(resp)
+	if err == nil {
+		var dataSanitize = sanitizeSensitiveData(bytes)
+		if dataSanitize != "null" {
+			logFormat = logFormat + " RESPONSE=" + dataSanitize
+		} else {
+			logFormat = logFormat + " MESSAGE={ " + fmt.Sprintf("%v", resp) + " }"
+		}
+	}
+	return logFormat
+}
+
+func appendExecutor(ctx *fiber.Ctx, logFormat string) string {
+	executor := ctx.Cookies("cms_email", "")
+	if executor != "" {
+		logFormat = logFormat + " EXECUTOR=" + executor
+	}
+	return logFormat
+}
+
+func writeLogToFile(logFormat string) {
+	go func() {
+		f, err := os.OpenFile(Cfg.Application.LogPath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+		if err != nil {
+			log.Println(err)
+			return
+		}
+		defer f.Close()
+		if _, err := f.WriteString(logFormat + "\n"); err != nil {
+			log.Println(err)
+		}
+	}()
+}
+
+func CreateAccessLog(ctx *fiber.Ctx, ptr string, statusCode int, resp any) {
+	if !Cfg.Application.EnableLog {
+		return
+	}
+
+	logFormat := buildLogFormat(ctx, ptr, statusCode)
+	logFormat = appendPayload(ctx, logFormat)
+	logFormat = appendResponse(resp, logFormat)
+	logFormat = appendExecutor(ctx, logFormat)
+
+	if Cfg.Application.EnableLogToFile {
+		writeLogToFile(logFormat)
+	}
+
+	color.Magenta(logFormat)
 }

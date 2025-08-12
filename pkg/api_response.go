@@ -54,10 +54,10 @@ type DetailResponse struct {
 
 type ResponseApi struct {
 	Details DetailResponse `json:"details"`
-	Valid   bool           `json:"valid" example:"true"`
+	Success bool           `json:"success" example:"true"`
 	Data    any            `json:"data" swaggertype:"array,object"`
 	Errors  any            `json:"errors" swaggertype:"array,object"`
-	Message string         `json:"message" example:"API Message"`
+	Message interface{}    `json:"message" example:"API Message"`
 } // @name ResponseApi
 
 type ResponseApiError struct {
@@ -79,7 +79,7 @@ func ResponseApiWrapper(ctx *fiber.Ctx, msg string, status string, statusCode in
 		CreateAccessLog(ctx, "[ACCESS:API][ERROR]", statusCode, errors)
 
 		return ctx.Status(statusCode).JSON(ResponseApi{
-			Valid:   false,
+			Success: false,
 			Message: msg,
 			Data:    data,
 			Errors:  errors,
@@ -90,10 +90,169 @@ func ResponseApiWrapper(ctx *fiber.Ctx, msg string, status string, statusCode in
 	CreateAccessLog(ctx, "[ACCESS:API][SUCCESS]", statusCode, data)
 
 	return ctx.Status(statusCode).JSON(ResponseApi{
-		Valid:   true,
+		Success: true,
 		Message: msg,
 		Data:    data,
 		Errors:  errors,
+		Details: details,
+	})
+}
+
+func ResponseApiOK(ctx *fiber.Ctx, msg string, data any) error {
+	return ResponseApiWrapper(ctx, msg, string(ApiStatusSuccessOk), int(HttpStatusOK), data, nil)
+}
+
+func ResponseApiCreated(ctx *fiber.Ctx, msg string, data any) error {
+	return ResponseApiWrapper(ctx, msg, string(ApiStatusSuccessCreated), int(HttpStatusCreated), data, nil)
+}
+
+func ResponseApiUpdated(ctx *fiber.Ctx, msg string, data any) error {
+	return ResponseApiWrapper(ctx, msg, string(ApiStatusSuccessUpdated), int(HttpStatusOK), data, nil)
+}
+
+func ResponseApiDeleted(ctx *fiber.Ctx, msg string) error {
+	return ResponseApiWrapper(ctx, msg, string(ApiStatusSuccessDeleted), int(HttpStatusNoContent), nil, nil)
+}
+
+func ResponseApiErrorWrapper(ctx *fiber.Ctx, status ApiStatusError, statusCode HttpStatusCode, message interface{}) error {
+	details := DetailResponse{
+		StatusCode: int(statusCode),
+		Path:       ctx.Request().URI().String(),
+		Method:     string(ctx.Request().Header.Method()),
+		Status:     string(status),
+	}
+
+	CreateAccessLog(ctx, "[ACCESS:API][ERROR]", int(statusCode), message)
+
+	return ctx.Status(int(statusCode)).JSON(ResponseApi{
+		Success: false,
+		Message: message,
+		Errors:  nil,
+		Data:    nil,
+		Details: details,
+	})
+}
+func ResponseApiErrorCustom(ctx *fiber.Ctx, status ApiStatusError, statusCode HttpStatusCode, message interface{}) error {
+	return ResponseApiErrorWrapper(ctx, status, statusCode, message)
+}
+func ResponseApiErrorBadRequest(ctx *fiber.Ctx, message interface{}) error {
+	return ResponseApiErrorWrapper(ctx, ApiStatusErrorBadRequest, HttpStatusBadRequest, message)
+}
+
+func ResponseApiErrorUnauthorized(ctx *fiber.Ctx, message interface{}) error {
+	return ResponseApiErrorWrapper(ctx, ApiStatusErrorUnauthorized, HttpStatusUnauthorized, message)
+}
+
+func ResponseApiErrorForbidden(ctx *fiber.Ctx, message interface{}) error {
+	return ResponseApiErrorWrapper(ctx, ApiStatusErrorForbidden, HttpStatusForbidden, message)
+}
+
+func ResponseApiErrorNotFound(ctx *fiber.Ctx, message interface{}) error {
+	return ResponseApiErrorWrapper(ctx, ApiStatusErrorNotFound, HttpStatusNotFound, message)
+}
+
+func ResponseApiErrorInternalServer(ctx *fiber.Ctx, message interface{}) error {
+	return ResponseApiErrorWrapper(ctx, ApiStatusErrorInternalServerError, HttpStatusInternalServerError, message)
+}
+
+func ResponseApiErrorUnprocessableEntity(ctx *fiber.Ctx, message interface{}) error {
+	return ResponseApiErrorWrapper(ctx, ApiStatusErrorUnprocessableEntity, HttpStatusUnprocessableEntity, message)
+}
+
+func ResponseApiErrorTooManyRequests(ctx *fiber.Ctx, message interface{}) error {
+	return ResponseApiErrorWrapper(ctx, ApiStatusErrorTooManyRequests, HttpStatusTooManyRequests, message)
+}
+
+func ResponseApiErrorGone(ctx *fiber.Ctx, message interface{}) error {
+	return ResponseApiErrorWrapper(ctx, ApiStatusErrorGone, HttpStatusGone, message)
+}
+
+func ResponseApiErrorServiceUnavailable(ctx *fiber.Ctx, message interface{}) error {
+	return ResponseApiErrorWrapper(ctx, ApiStatusErrorServiceUnavailable, HttpStatusServiceUnavailable, message)
+}
+
+func ResponseApiErrorUnprocessAble(ctx *fiber.Ctx, message interface{}) error {
+	return ResponseApiErrorWrapper(ctx, ApiErrorUnprocessAble, HttpStatusUnprocessableEntity, message)
+}
+
+func ResponseApiErrorLimitReached(ctx *fiber.Ctx, message interface{}) error {
+	return ResponseApiErrorWrapper(ctx, ApiErrorLimitReached, HttpStatusTooManyRequests, message)
+}
+
+func ResponseApiErrorWithStatus(ctx *fiber.Ctx, status ApiStatusError, message interface{}) error {
+	switch status {
+	case ApiStatusErrorBadRequest:
+		return ResponseApiErrorBadRequest(ctx, message)
+	case ApiStatusErrorUnauthorized:
+		return ResponseApiErrorUnauthorized(ctx, message)
+	case ApiStatusErrorForbidden:
+		return ResponseApiErrorForbidden(ctx, message)
+	case ApiStatusErrorNotFound:
+		return ResponseApiErrorNotFound(ctx, message)
+	case ApiStatusErrorInternalServerError:
+		return ResponseApiErrorInternalServer(ctx, message)
+	case ApiStatusErrorUnprocessableEntity:
+		return ResponseApiErrorUnprocessableEntity(ctx, message)
+	case ApiStatusErrorTooManyRequests:
+		return ResponseApiErrorTooManyRequests(ctx, message)
+	case ApiStatusErrorGone:
+		return ResponseApiErrorGone(ctx, message)
+	case ApiStatusErrorServiceUnavailable:
+		return ResponseApiErrorServiceUnavailable(ctx, message)
+	default:
+		return ResponseApiErrorCustom(ctx, ApiStatusErrorInternalServerError, HttpStatusInternalServerError, message)
+	}
+}
+
+func ResponseApiErrorWithStatusCode(ctx *fiber.Ctx, statusCode HttpStatusCode, message interface{}) error {
+	switch statusCode {
+	case HttpStatusBadRequest:
+		return ResponseApiErrorBadRequest(ctx, message)
+	case HttpStatusUnauthorized:
+		return ResponseApiErrorUnauthorized(ctx, message)
+	case HttpStatusForbidden:
+		return ResponseApiErrorForbidden(ctx, message)
+	case HttpStatusNotFound:
+		return ResponseApiErrorNotFound(ctx, message)
+	case HttpStatusInternalServerError:
+		return ResponseApiErrorInternalServer(ctx, message)
+	case HttpStatusUnprocessableEntity:
+		return ResponseApiErrorUnprocessableEntity(ctx, message)
+	case HttpStatusTooManyRequests:
+		return ResponseApiErrorTooManyRequests(ctx, message)
+	case HttpStatusGone:
+		return ResponseApiErrorGone(ctx, message)
+	case HttpStatusServiceUnavailable:
+		return ResponseApiErrorServiceUnavailable(ctx, message)
+	default:
+		return ResponseApiErrorCustom(ctx, ApiStatusErrorInternalServerError, statusCode, message)
+	}
+}
+
+func ResponseApiErrorWithStatusAndCode(ctx *fiber.Ctx, status ApiStatusError, statusCode HttpStatusCode, message interface{}) error {
+	return ResponseApiErrorWrapper(ctx, status, statusCode, message)
+}
+func ResponseApiErrorWithStatusAndMessage(ctx *fiber.Ctx, status ApiStatusError, message interface{}) error {
+	return ResponseApiErrorWrapper(ctx, status, HttpStatusInternalServerError, message)
+}
+
+func ResponseApiErrorWithMessage(ctx *fiber.Ctx, statusCode HttpStatusCode, message interface{}) error {
+	return ResponseApiErrorWrapper(ctx, ApiStatusErrorInternalServerError, statusCode, message)
+}
+
+func ResponseApiErrorWithStatusAndData(ctx *fiber.Ctx, status ApiStatusError, data any) error {
+	details := DetailResponse{
+		StatusCode: int(HttpStatusInternalServerError),
+		Path:       ctx.Request().URI().String(),
+		Method:     string(ctx.Request().Header.Method()),
+		Status:     string(status),
+	}
+
+	return ctx.Status(int(HttpStatusInternalServerError)).JSON(ResponseApi{
+		Success: false,
+		Message: "",
+		Errors:  nil,
+		Data:    nil,
 		Details: details,
 	})
 }

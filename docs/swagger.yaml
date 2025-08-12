@@ -14,7 +14,7 @@ definitions:
         example: Q2Sb9@example.com
         type: string
       password:
-        example: password123
+        example: Cilok99!@
         type: string
       roles:
         description: multiple roles
