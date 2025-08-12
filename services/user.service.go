@@ -6,6 +6,7 @@ import (
 
 	"github.com/DiansSopandi/goride_be/dto"
 	"github.com/DiansSopandi/goride_be/models"
+	"github.com/DiansSopandi/goride_be/pkg/utils"
 	"github.com/DiansSopandi/goride_be/repository"
 )
 
@@ -42,11 +43,20 @@ func (s *UserService) GetAllUsers() ([]dto.UserResponse, error) {
 	return users, nil
 }
 
-func (s *UserService) CreateUser(tx *sql.Tx, user *models.User) (models.User, error) {
+// func (s *UserService) CreateUser(tx *sql.Tx, user *models.User) (models.User, error) {
+func (s *UserService) CreateUser(tx *sql.Tx, createUserDto *dto.UserCreateRequest) (models.User, error) {
+	password, _ := utils.HashPassword(createUserDto.Password)
+	user := models.User{
+		Username: createUserDto.Username,
+		Email:    createUserDto.Email,
+		Password: password,
+	}
+
 	exists, err := s.UserRepo.CheckUsernameExistsWithTx(tx, user.Username)
 	if err != nil {
 		return models.User{}, fmt.Errorf("failed to check username: %w", err)
 	}
+
 	if exists {
 		return models.User{}, fmt.Errorf("username already exists")
 	}
@@ -55,11 +65,12 @@ func (s *UserService) CreateUser(tx *sql.Tx, user *models.User) (models.User, er
 	if err != nil {
 		return models.User{}, fmt.Errorf("failed to check email: %w", err)
 	}
+
 	if exists {
 		return models.User{}, fmt.Errorf("email already exists")
 	}
 
-	res, err := s.UserRepo.CreateUser(tx, user)
+	res, err := s.UserRepo.CreateUser(tx, &user)
 	if err != nil {
 		return models.User{}, err
 	}

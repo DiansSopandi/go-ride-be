@@ -102,7 +102,7 @@ func (r *UserRepository) GetUserByEmail(email string) (*models.User, error) {
 
 func (r *UserRepository) CreateUser(tx *sql.Tx, user *models.User) (models.User, error) {
 	// query := `INSERT INTO users (username, email, password, avatar_url, avatar_name, first_name, last_name, phone, address, role) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`
-	query := `INSERT INTO usersx (username, email, password) VALUES ($1, $2, $3) RETURNING id, username, email,  created_at, updated_at`
+	query := `INSERT INTO users (username, email, password) VALUES ($1, $2, $3) RETURNING id, username, email,  created_at, updated_at`
 
 	// err := r.DB.QueryRow(query,
 	// err := tx.QueryRow(query,

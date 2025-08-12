@@ -32,6 +32,54 @@
                 }
             }
         },
+        "/v1/auth/register": {
+            "post": {
+                "description": "Register a new user and assign roles if provided.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Register a new user with roles",
+                "parameters": [
+                    {
+                        "description": "User registration data",
+                        "name": "registerDto",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.UserRegisterRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "User registration successful",
+                        "schema": {
+                            "$ref": "#/definitions/models.User"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request, validation errors",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error, database or service errors",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
         "/v1/roles": {
             "get": {
                 "description": "Get all roles",
@@ -188,12 +236,54 @@
                         "type": "string"
                     },
                     "example": [
+                        "admin",
+                        "driver",
                         "user",
-                        "admin"
+                        "superadmin"
                     ]
                 },
                 "username": {
                     "type": "string",
+                    "example": "John Doe"
+                }
+            }
+        },
+        "dto.UserRegisterRequest": {
+            "type": "object",
+            "required": [
+                "email",
+                "password",
+                "password_confirm",
+                "roles",
+                "username"
+            ],
+            "properties": {
+                "email": {
+                    "type": "string",
+                    "example": "Q2Sb9@example.com"
+                },
+                "password": {
+                    "type": "string",
+                    "minLength": 8,
+                    "example": "Cilok99!@"
+                },
+                "password_confirm": {
+                    "type": "string",
+                    "example": "Cilok99!@"
+                },
+                "roles": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "example": [
+                        "user"
+                    ]
+                },
+                "username": {
+                    "type": "string",
+                    "maxLength": 50,
+                    "minLength": 3,
                     "example": "John Doe"
                 }
             }
@@ -219,6 +309,34 @@
                     "type": "string"
                 },
                 "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.User": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "description": "Roles    string `json:\"role\" db:\"role\"` // e.g., \"user\", \"driver\", \"admin\"\nAvatarUrl  sql.NullString `json:\"avatar_url\" db:\"avatar_url\"`\nAvatarName sql.NullString `json:\"avatar_name\" db:\"avatar_name\"`\nFirstName  sql.NullString `json:\"first_name\" db:\"first_name\"`\nLastName   sql.NullString `json:\"last_name\" db:\"last_name\"`\nPhone      sql.NullString `json:\"phone\" db:\"phone\"`\nAddress    sql.NullString `json:\"address\" db:\"address\"`",
+                    "type": "string"
+                },
+                "deleted_at": {
+                    "description": "Optional, for soft delete",
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "password": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "username": {
                     "type": "string"
                 }
             }

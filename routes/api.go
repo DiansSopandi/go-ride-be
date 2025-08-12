@@ -10,10 +10,12 @@ func SetupRoutes(app *fiber.App) {
 	// appPath := pkg.GetEnv("APP_PATH")
 	appPath := pkg.Cfg.Application.AppPath
 	api := app.Group(appPath)
+	auth := api.Group("/auth")
 
 	handler.RootHandler(api)
 	handler.RolesRoutes(api)
 	handler.UserRoutes(api)
+	handler.RegisterRoutes(auth)
 
 	// api.Get("/", func(c *fiber.Ctx) error {
 	// 	return handlers.RootHandler(c)

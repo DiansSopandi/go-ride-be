@@ -7,6 +7,7 @@ import (
 	"unicode"
 
 	"github.com/DiansSopandi/goride_be/dto"
+	"github.com/go-playground/validator/v10"
 )
 
 func ValidateCreateUserRequest(req *dto.UserCreateRequest) error {
@@ -35,6 +36,50 @@ func ValidateCreateUserRequest(req *dto.UserCreateRequest) error {
 	}
 
 	return nil
+}
+
+func ValidateRegisterUserRequest(req *dto.UserRegisterRequest) error {
+
+	validate := validator.New()
+
+	err := validate.Struct(req)
+
+	if err != nil {
+		for _, e := range err.(validator.ValidationErrors) {
+			return fmt.Errorf("%s %s", e.Field(), validationMessage(e))
+		}
+	}
+
+	if req.PasswordConfirm == "" {
+		return fmt.Errorf("password confirmation is required")
+	}
+
+	if req.Password != req.PasswordConfirm {
+		return fmt.Errorf("password and password confirmation do not match")
+	}
+
+	if len(req.Roles) == 0 {
+		return fmt.Errorf("at least one role is required")
+	}
+
+	return nil
+}
+
+func validationMessage(e validator.FieldError) string {
+	switch e.Tag() {
+	case "required":
+		return "is required"
+	case "email":
+		return "must be a valid email address"
+	case "min":
+		return fmt.Sprintf("must be at least %s characters long", e.Param())
+	case "max":
+		return fmt.Sprintf("must be at most %s characters long", e.Param())
+	case "eqfield":
+		return fmt.Sprintf("must be equal to %s", e.Param())
+	default:
+		return fmt.Sprintf("is invalid (%s)", e.Tag())
+	}
 }
 
 func isValidEmail(email string) bool {

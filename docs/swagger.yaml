@@ -19,14 +19,46 @@ definitions:
       roles:
         description: multiple roles
         example:
-        - user
         - admin
+        - driver
+        - user
+        - superadmin
         items:
           type: string
         type: array
       username:
         example: John Doe
         type: string
+    type: object
+  dto.UserRegisterRequest:
+    properties:
+      email:
+        example: Q2Sb9@example.com
+        type: string
+      password:
+        example: Cilok99!@
+        minLength: 8
+        type: string
+      password_confirm:
+        example: Cilok99!@
+        type: string
+      roles:
+        example:
+        - user
+        items:
+          type: string
+        type: array
+      username:
+        example: John Doe
+        maxLength: 50
+        minLength: 3
+        type: string
+    required:
+    - email
+    - password
+    - password_confirm
+    - roles
+    - username
     type: object
   models.Role:
     properties:
@@ -43,6 +75,32 @@ definitions:
       name:
         type: string
       updated_at:
+        type: string
+    type: object
+  models.User:
+    properties:
+      created_at:
+        description: |-
+          Roles    string `json:"role" db:"role"` // e.g., "user", "driver", "admin"
+          AvatarUrl  sql.NullString `json:"avatar_url" db:"avatar_url"`
+          AvatarName sql.NullString `json:"avatar_name" db:"avatar_name"`
+          FirstName  sql.NullString `json:"first_name" db:"first_name"`
+          LastName   sql.NullString `json:"last_name" db:"last_name"`
+          Phone      sql.NullString `json:"phone" db:"phone"`
+          Address    sql.NullString `json:"address" db:"address"`
+        type: string
+      deleted_at:
+        description: Optional, for soft delete
+        type: string
+      email:
+        type: string
+      id:
+        type: integer
+      password:
+        type: string
+      updated_at:
+        type: string
+      username:
         type: string
     type: object
 info:
@@ -67,6 +125,38 @@ paths:
       summary: Root Endpoint
       tags:
       - Root
+  /v1/auth/register:
+    post:
+      consumes:
+      - application/json
+      description: Register a new user and assign roles if provided.
+      parameters:
+      - description: User registration data
+        in: body
+        name: registerDto
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UserRegisterRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User registration successful
+          schema:
+            $ref: '#/definitions/models.User'
+        "400":
+          description: Bad request, validation errors
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal server error, database or service errors
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Register a new user with roles
+      tags:
+      - Auth
   /v1/roles:
     get:
       consumes:

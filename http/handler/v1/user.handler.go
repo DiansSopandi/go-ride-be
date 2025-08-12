@@ -9,7 +9,6 @@ import (
 	model "github.com/DiansSopandi/goride_be/models"
 	"github.com/DiansSopandi/goride_be/pkg"
 	helper "github.com/DiansSopandi/goride_be/pkg/helper"
-	"github.com/DiansSopandi/goride_be/pkg/utils"
 	"github.com/DiansSopandi/goride_be/repository"
 	service "github.com/DiansSopandi/goride_be/services"
 	"github.com/gofiber/fiber/v2"
@@ -32,8 +31,9 @@ func NewUserHandler() *UserHandler {
 func UserRoutes(route fiber.Router) {
 	handler := NewUserHandler()
 
-	route.Post("/users", middlewares.WithTransaction(CreateUserHandler(handler)))
 	route.Get("/users", GetUserHandler(handler))
+	route.Post("/users", middlewares.WithTransaction(CreateUserHandler(handler)))
+	// route.Post("/users/register", middlewares.WithTransaction(RegisterUserHandler(handler)))
 }
 
 func CreateUserHandler(handler *UserHandler) fiber.Handler {
@@ -94,38 +94,10 @@ func (h *UserHandler) CreateUser(c *fiber.Ctx, createUserDto *dto.UserCreateRequ
 	if err != nil {
 		return model.User{}, err
 	}
+	userServiceWithTx := service.NewUserService(userRepo)
 
 	// userJson, err := json.MarshalIndent(createUserDto, "", "  ")
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
 	// fmt.Println(string(userJson))
-
-	password, _ := utils.HashPassword(createUserDto.Password)
-	userDto := model.User{
-		Username: createUserDto.Username,
-		Email:    createUserDto.Email,
-		Password: password,
-	}
-
-	// tx, err := h.UserService.BeginTransaction() // sudah dihandle di middleware
-	// if err != nil {
-	// 	return model.User{}, fmt.Errorf("failed to begin transaction: %w", err)
-	// }
-
-	// defer func() {
-	// 	if p := recover(); p != nil {
-	// 		tx.Rollback()
-	// 		panic(p)
-	// 	} else if err != nil {
-	// 		tx.Rollback()
-	// 	}
-	// }()
-
-	// defer db.RollbackOnError(tx, err) // sudah dihandle di middleware
-	userServiceWithTx := service.NewUserService(userRepo)
-	// Ambil service dari context (TX sudah aktif) di middleware
-	// svc := c.Locals(middlewares.UserServiceCtxKey).(*service.UserService)
 
 	var roleIDs []int64
 	if len(createUserDto.Roles) > 0 {
@@ -138,9 +110,12 @@ func (h *UserHandler) CreateUser(c *fiber.Ctx, createUserDto *dto.UserCreateRequ
 		}
 	}
 
-	// res, err := h.UserService.CreateUser(tx, &userDto)
-	res, err := userServiceWithTx.CreateUser(tx, &userDto)
-	// res, err := svc.CreateUser(&userDto)
+	// Ambil service dari context (TX sudah aktif) di middleware
+	// svc := c.Locals(middlewares.UserServiceCtxKey).(*service.UserService)
+
+	// res, err := h.UserService.CreateUser(tx, createUserDto)
+	res, err := userServiceWithTx.CreateUser(tx, createUserDto)
+	// res, err := svc.CreateUser(createUserDto)
 	if err != nil {
 		return model.User{}, err
 	}
@@ -153,12 +128,6 @@ func (h *UserHandler) CreateUser(c *fiber.Ctx, createUserDto *dto.UserCreateRequ
 			return model.User{}, err
 		}
 	}
-
-	// Commit transaction
-	// err = tx.Commit() // sudah  dihandle di middleware
-	// if err != nil {
-	// 	return model.User{}, fmt.Errorf("failed to commit transaction: %w", err)
-	// }
 
 	return res, nil
 }
