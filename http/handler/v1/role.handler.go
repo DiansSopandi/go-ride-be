@@ -7,6 +7,7 @@ import (
 	"github.com/DiansSopandi/goride_be/middlewares"
 	"github.com/DiansSopandi/goride_be/models"
 	model "github.com/DiansSopandi/goride_be/models"
+	"github.com/DiansSopandi/goride_be/pkg"
 	"github.com/DiansSopandi/goride_be/repository"
 	service "github.com/DiansSopandi/goride_be/services"
 	"github.com/gofiber/fiber/v2"
@@ -42,12 +43,14 @@ func GetAllRolesHandler(handler *RoleHandler) fiber.Handler {
 				"data":    nil,
 			})
 		}
-		return c.Status(fiber.StatusOK).JSON(fiber.Map{
-			"message": "Role fetch successfuly...",
-			"status":  fiber.StatusOK,
-			"success": true,
-			"data":    roles,
-		})
+
+		// return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		// 	"message": "Role fetch successfully...",
+		// 	"status":  fiber.StatusOK,
+		// 	"success": true,
+		// 	"data":    roles,
+		// })
+		return pkg.ResponseApiOK(c, "Role fetch successfully...", roles)
 	}
 }
 

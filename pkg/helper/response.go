@@ -7,11 +7,8 @@ import (
 
 func ToUserResponse(user models.User, roles []string) dto.UserResponse {
 	return dto.UserResponse{
-		ID:        uint(user.ID),
-		Username:  user.Username,
-		Email:     user.Email,
-		Roles:     roles,
-		CreatedAt: user.CreatedAt,
-		UpdatedAt: user.UpdatedAt,
+		ID:    uint(user.ID),
+		Email: user.Email,
+		Roles: roles,
 	}
 }

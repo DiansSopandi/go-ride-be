@@ -1,7 +1,5 @@
 package dto
 
-import "time"
-
 type UserCreateRequest struct {
 	Username string   `json:"username" example:"John Doe"`
 	Email    string   `json:"email" example:"Q2Sb9@example.com"`
@@ -37,21 +35,18 @@ type UserUpdateRequest struct {
 }
 
 type UserLoginRequest struct {
-	Username string `json:"username" validate:"required"`
-	Password string `json:"password" validate:"required"`
+	Email    string `json:"email" validate:"required,email" example:"Q2Sb9@example.com"`
+	Password string `json:"password" validate:"required" example:"Cilok99!@"`
+}
+
+type UserResponse struct {
+	ID       uint     `json:"id"`
+	Username *string  `json:"username"`
+	Email    string   `json:"email"`
+	Roles    []string `json:"roles"`
 }
 
 type UserLoginResponse struct {
 	User  UserResponse `json:"user"`
 	Token string       `json:"token"`
-}
-
-type UserResponse struct {
-	ID        uint       `json:"id"`
-	Username  string     `json:"username"`
-	Email     string     `json:"email"`
-	Roles     []string   `json:"roles"`
-	CreatedAt time.Time  `json:"createdAt"`
-	UpdatedAt time.Time  `json:"updatedAt"`
-	DeletedAt *time.Time `json:"deletedAt"`
 }

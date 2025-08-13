@@ -139,7 +139,7 @@ func (r *UserRepository) DeleteUser(tx *sql.Tx, id int) error {
 }
 func (r *UserRepository) GetAllUsers() ([]dto.UserResponse, error) {
 	// query := `SELECT id, username, email, password, avatar_url, avatar_name, first_name, last_name, phone, address, role, created_at, updated_at, deleted_at FROM users WHERE deleted_at IS NULL`
-	query := `SELECT u.id, u.username, u.email, COALESCE(ARRAY_AGG(r.name), '{}') as roles, u.created_at, u.updated_at 
+	query := `SELECT u.id,  u.email, COALESCE(ARRAY_AGG(r.name), '{}') as roles 
 	FROM users u
 	INNER JOIN user_roles usr ON u.id = usr.user_id
 	INNER JOIN roles r ON usr.role_id = r.id 
@@ -158,7 +158,6 @@ func (r *UserRepository) GetAllUsers() ([]dto.UserResponse, error) {
 		var user dto.UserResponse //models.User
 		err := rows.Scan(
 			&user.ID,
-			&user.Username,
 			&user.Email,
 			&roles,
 			// &user.AvatarUrl,
@@ -167,8 +166,6 @@ func (r *UserRepository) GetAllUsers() ([]dto.UserResponse, error) {
 			// &user.LastName,
 			// &user.Phone,
 			// &user.Address,
-			&user.CreatedAt,
-			&user.UpdatedAt,
 		)
 		if err != nil {
 			fmt.Println(err)

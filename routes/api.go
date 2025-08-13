@@ -15,7 +15,7 @@ func SetupRoutes(app *fiber.App) {
 	handler.RootHandler(api)
 	handler.RolesRoutes(api)
 	handler.UserRoutes(api)
-	handler.RegisterRoutes(auth)
+	handler.AuthRoutes(auth)
 
 	// api.Get("/", func(c *fiber.Ctx) error {
 	// 	return handlers.RootHandler(c)

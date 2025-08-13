@@ -22,7 +22,9 @@ func NewUserHandler() *UserHandler {
 	var tx *sql.Tx
 	// userRepo, _ := repository.NewUserRepository(tx, false)
 	userRepo, _ := repository.NewUserRepository(tx)
-	userService := service.NewUserService(userRepo)
+	roleRepo, _ := repository.NewRoleRepository(tx)
+	userService := service.NewUserService(userRepo, roleRepo)
+
 	return &UserHandler{
 		UserService: userService, // service.NewUserService(),
 	}
@@ -72,7 +74,7 @@ func GetUserHandler(handler *UserHandler) fiber.Handler {
 			return pkg.ResponseApiErrorInternalServer(c, fmt.Sprintf("Failed to fetch users: %v", err))
 		}
 
-		return pkg.ResponseApiOK(c, "User fetch successfully", res)
+		return pkg.ResponseApiOK(c, "User fetch successfully...", res)
 	}
 }
 
@@ -90,16 +92,18 @@ func (h *UserHandler) CreateUser(c *fiber.Ctx, createUserDto *dto.UserCreateRequ
 	tx := c.Locals(middlewares.TxContextKey).(*sql.Tx)
 	// isTx := tx != nil
 	// userRepo, err := repository.NewUserRepository(tx, isTx)
-	userRepo, err := repository.NewUserRepository(tx)
-	if err != nil {
-		return model.User{}, err
-	}
-	userServiceWithTx := service.NewUserService(userRepo)
+	userRepo, _ := repository.NewUserRepository(tx)
+	roleRepo, _ := repository.NewRoleRepository(tx)
+
+	userServiceWithTx := service.NewUserService(userRepo, roleRepo)
 
 	// userJson, err := json.MarshalIndent(createUserDto, "", "  ")
 	// fmt.Println(string(userJson))
 
-	var roleIDs []int64
+	var (
+		roleIDs []int64
+		err     error
+	)
 	if len(createUserDto.Roles) > 0 {
 		// roleIDs, err = h.UserService.ValidateRolesExist(tx, createUserDto.Roles)
 		roleIDs, err = userServiceWithTx.ValidateRolesExist(tx, createUserDto.Roles)

@@ -41,7 +41,7 @@ type ApplicationConfig struct {
 	EnableTrustedProxyCheck bool   `mapstructure:"enable_trusted_proxy_check"`
 	EnableCache             bool   `mapstructure:"enable_cache"`
 	AppKey                  string `mapstructure:"app_key"`
-	JwtSecret               string `mapstructure:"jwt_secret"`
+	JwtSecretKey            string `mapstructure:"jwt_secret_key"`
 	SsoJwtSecret            string `mapstructure:"sso_jwt_secret"`
 	FilePath                string `mapstructure:"file_path"`
 }

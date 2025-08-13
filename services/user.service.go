@@ -23,11 +23,13 @@ import (
 
 type UserService struct {
 	UserRepo *repository.UserRepository
+	RoleRepo *repository.RoleRepository
 }
 
-func NewUserService(userRepo *repository.UserRepository) *UserService {
+func NewUserService(userRepo *repository.UserRepository, roleRepo *repository.RoleRepository) *UserService {
 	return &UserService{
 		UserRepo: userRepo, // repository.NewUserRepository(),
+		RoleRepo: roleRepo, // Initialize RoleRepository if needed
 	}
 }
 
@@ -76,6 +78,50 @@ func (s *UserService) CreateUser(tx *sql.Tx, createUserDto *dto.UserCreateReques
 	}
 
 	return res, nil
+}
+
+func (s *UserService) LoginUser(tx *sql.Tx, loginDto dto.UserLoginRequest) (dto.UserLoginResponse, error) {
+	var roleNames []string
+
+	user, errUser := s.UserRepo.GetUserByEmail(loginDto.Email)
+	if errUser != nil {
+		return dto.UserLoginResponse{}, fmt.Errorf("failed to get user by email: %w", errUser)
+	}
+
+	role, errRole := s.RoleRepo.GetRoleByUserID(int(user.ID))
+	if errRole != nil {
+		return dto.UserLoginResponse{}, fmt.Errorf("failed to get role by user ID: %w", errRole)
+	}
+
+	for _, r := range role {
+		roleNames = append(roleNames, r.Name)
+	}
+
+	if user == nil || !utils.CheckPasswordHash(loginDto.Password, user.Password) {
+		return dto.UserLoginResponse{}, fmt.Errorf("invalid email or password")
+	}
+
+	token, err := utils.GenerateJWT(user.ID, user.Email)
+	if err != nil {
+		return dto.UserLoginResponse{}, fmt.Errorf("failed to generate token: %w", err)
+	}
+
+	// userMap := map[string]interface{}{}
+	// userBytes, _ := json.Marshal(user)
+	// json.Unmarshal(userBytes, &userMap)
+	// userMap["token"] = token
+
+	userResponse := dto.UserResponse{
+		ID:       uint(user.ID),
+		Username: &user.Username,
+		Email:    user.Email,
+		Roles:    roleNames,
+	}
+
+	return dto.UserLoginResponse{
+		User:  userResponse,
+		Token: token,
+	}, nil
 }
 
 func (s *UserService) UpdateUser(tx *sql.Tx, user *models.User) error {

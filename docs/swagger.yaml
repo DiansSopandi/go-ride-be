@@ -30,6 +30,25 @@ definitions:
         example: John Doe
         type: string
     type: object
+  dto.UserLoginRequest:
+    properties:
+      email:
+        example: Q2Sb9@example.com
+        type: string
+      password:
+        example: Cilok99!@
+        type: string
+    required:
+    - email
+    - password
+    type: object
+  dto.UserLoginResponse:
+    properties:
+      token:
+        type: string
+      user:
+        $ref: '#/definitions/dto.UserResponse'
+    type: object
   dto.UserRegisterRequest:
     properties:
       email:
@@ -59,6 +78,25 @@ definitions:
     - password_confirm
     - roles
     - username
+    type: object
+  dto.UserResponse:
+    properties:
+      createdAt:
+        type: string
+      deletedAt:
+        type: string
+      email:
+        type: string
+      id:
+        type: integer
+      roles:
+        items:
+          type: string
+        type: array
+      updatedAt:
+        type: string
+      username:
+        type: string
     type: object
   models.Role:
     properties:
@@ -125,6 +163,38 @@ paths:
       summary: Root Endpoint
       tags:
       - Root
+  /v1/auth/login:
+    post:
+      consumes:
+      - application/json
+      description: Login a user and return user details and token.
+      parameters:
+      - description: User login data
+        in: body
+        name: loginDto
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UserLoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User login successful
+          schema:
+            $ref: '#/definitions/dto.UserLoginResponse'
+        "400":
+          description: Bad request, validation errors
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal server error, database or service errors
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Login a user
+      tags:
+      - Auth
   /v1/auth/register:
     post:
       consumes:
