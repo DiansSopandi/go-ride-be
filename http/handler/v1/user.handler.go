@@ -71,7 +71,10 @@ func GetUserHandler(handler *UserHandler) fiber.Handler {
 		res, err := handler.GetUser()
 
 		if err != nil {
-			return pkg.ResponseApiErrorInternalServer(c, fmt.Sprintf("Failed to fetch users: %v", err))
+			return fmt.Errorf("Failed to fetch users: %v", err)
+			// return errors.InternalError(c, fmt.Sprintf("Failed to fetch users: %v", err))
+			// return errors.UserNotFound(c, fmt.Sprintf("Failed to fetch users: %v", err))
+			// return pkg.ResponseApiErrorInternalServer(c, fmt.Sprintf("Failed to fetch users: %v", err))
 		}
 
 		return pkg.ResponseApiOK(c, "User fetch successfully...", res)

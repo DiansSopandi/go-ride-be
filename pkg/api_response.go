@@ -42,6 +42,8 @@ const (
 	ApiStatusErrorServiceUnavailable  ApiStatusError = "error_service_unavailable"
 	ApiErrorUnprocessAble             ApiStatusError = "error_unprocessable"
 	ApiErrorLimitReached              ApiStatusError = "error_limit_reached"
+	ApiStatusErrorConflict            ApiStatusError = "error_conflict"
+	ApiStatusErrorMethodNotAllowed    ApiStatusError = "error_method_not_allowed"
 )
 
 type DetailResponse struct {

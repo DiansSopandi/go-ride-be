@@ -9,9 +9,11 @@ import (
 
 	"github.com/DiansSopandi/goride_be/db"
 	"github.com/DiansSopandi/goride_be/docs"
+	"github.com/DiansSopandi/goride_be/middlewares"
 	"github.com/DiansSopandi/goride_be/pkg"
 	"github.com/DiansSopandi/goride_be/routes"
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/swagger"
 )
 
@@ -30,7 +32,14 @@ func ServerInitialize() {
 		os.Exit(0)
 	}()
 
-	app := fiber.New()
+	app := fiber.New(fiber.Config{
+		ErrorHandler: middlewares.ErrorHandler,
+	})
+
+	app.Use(cors.New(cors.Config{
+		AllowOrigins: "http://example.com, http://localhost:3000",
+		AllowMethods: "GET,POST,PUT,PATCH,DELETE",
+	}))
 
 	docs.SwaggerInfo.Title = "Swagger Example API"
 	docs.SwaggerInfo.Description = "This is a sample server for Go Ride API"
