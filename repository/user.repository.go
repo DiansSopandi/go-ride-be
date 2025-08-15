@@ -11,7 +11,6 @@ import (
 	"github.com/lib/pq"
 )
 
-// UserRepository represents the repository for user-related operations.
 type UserRepository struct {
 	DB *sql.DB
 	TX *sql.Tx
@@ -94,9 +93,14 @@ func (r *UserRepository) GetUserByEmail(email string) (*models.User, error) {
 		&user.UpdatedAt,
 		&user.DeletedAt,
 	)
+
 	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil
+		}
 		return nil, err
 	}
+
 	return &user, nil
 }
 

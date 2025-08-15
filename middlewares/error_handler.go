@@ -1,8 +1,6 @@
 package middlewares
 
 import (
-	"fmt"
-
 	"github.com/DiansSopandi/goride_be/errors"
 	"github.com/DiansSopandi/goride_be/pkg"
 	"github.com/gofiber/fiber/v2"
@@ -37,10 +35,9 @@ func ErrorHandler(c *fiber.Ctx, err error) error {
 		Details:    detail,
 		Success:    false,
 		Data:       nil,
-		Message:    errors.ErrorCodeMap["INTERNAL_ERROR"],
+		Message:    err.Error(), // errors.ErrorCodeMap["INTERNAL_ERROR"],
 		LogMessage: err.Error(),
 	}
-	fmt.Println("error handler", err)
 
 	if appErr, ok := err.(*errors.AppErrorResponse); ok {
 		res.Details.StatusCode = appErr.Details.StatusCode

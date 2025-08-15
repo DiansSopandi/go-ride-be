@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/DiansSopandi/goride_be/dto"
+	"github.com/DiansSopandi/goride_be/errors"
 	"github.com/DiansSopandi/goride_be/middlewares"
 	model "github.com/DiansSopandi/goride_be/models"
 	"github.com/DiansSopandi/goride_be/pkg"
@@ -35,7 +36,6 @@ func UserRoutes(route fiber.Router) {
 
 	route.Get("/users", GetUserHandler(handler))
 	route.Post("/users", middlewares.WithTransaction(CreateUserHandler(handler)))
-	// route.Post("/users/register", middlewares.WithTransaction(RegisterUserHandler(handler)))
 }
 
 func CreateUserHandler(handler *UserHandler) fiber.Handler {
@@ -54,7 +54,8 @@ func CreateUserHandler(handler *UserHandler) fiber.Handler {
 
 		if err != nil {
 			// return pkg.ResponseApiErrorInternalServer(c, fmt.Sprintf("Failed to create user: %v", err))
-			return fiber.NewError(fiber.StatusInternalServerError, err.Error())
+			// return fiber.NewError(fiber.StatusInternalServerError, err.Error())
+			return err
 			// return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			// 	"message": err.Error(),
 			// 	"status":  fiber.StatusInternalServerError,
@@ -71,9 +72,7 @@ func GetUserHandler(handler *UserHandler) fiber.Handler {
 		res, err := handler.GetUser()
 
 		if err != nil {
-			return fmt.Errorf("Failed to fetch users: %v", err)
-			// return errors.InternalError(c, fmt.Sprintf("Failed to fetch users: %v", err))
-			// return errors.UserNotFound(c, fmt.Sprintf("Failed to fetch users: %v", err))
+			return errors.InternalError(fmt.Sprintf("Failed to fetch users: %v", err))
 			// return pkg.ResponseApiErrorInternalServer(c, fmt.Sprintf("Failed to fetch users: %v", err))
 		}
 
@@ -113,7 +112,7 @@ func (h *UserHandler) CreateUser(c *fiber.Ctx, createUserDto *dto.UserCreateRequ
 		// roleIDs, err = svc.ValidateRolesExist(createUserDto.Roles)
 
 		if err != nil {
-			return model.User{}, fmt.Errorf("role validation failed: %w", err)
+			return model.User{}, errors.RoleValidationFailed(fmt.Sprintf("role validation failed: %v", err))
 		}
 	}
 
@@ -132,7 +131,7 @@ func (h *UserHandler) CreateUser(c *fiber.Ctx, createUserDto *dto.UserCreateRequ
 		err = userServiceWithTx.AssignRolesToUserWithTx(tx, uint(res.ID), roleIDs)
 		// err = svc.AssignRolesToUserWithTx(uint(res.ID), roleIDs)
 		if err != nil {
-			return model.User{}, err
+			return model.User{}, errors.InternalError(fmt.Sprintf("failed to assign roles: %v", err))
 		}
 	}
 
@@ -152,7 +151,7 @@ func (h *UserHandler) GetUser() ([]dto.UserResponse, error) {
 	res, err := h.UserService.GetAllUsers()
 
 	if err != nil {
-		return []dto.UserResponse{}, err
+		return []dto.UserResponse{}, errors.InternalError(fmt.Sprintf("Failed to fetch users: %v", err))
 	}
 
 	return res, nil

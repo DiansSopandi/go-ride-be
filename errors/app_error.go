@@ -1,17 +1,11 @@
 package errors
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/DiansSopandi/goride_be/pkg"
-	"github.com/gofiber/fiber/v2"
 )
-
-// type AppError struct {
-// 	Code    string `json:"code"`
-// 	Message string `json:"message"`
-// 	Status  int    `json:"status"`
-// }
 
 type DetailResponse struct {
 	Path       string `json:"path" example:"/api/v1/path"`
@@ -31,10 +25,14 @@ type AppErrorResponse struct {
 } // @name ResponseApi
 
 func (e *AppErrorResponse) Error() string {
-	return e.Message.(string)
+	if msg, ok := e.Message.(string); ok {
+		return msg
+	}
+	return fmt.Sprintf("%v", e.Message)
+	// return e.Message.(string)
 }
 
-func NewAppErrorResponse(c *fiber.Ctx, code string, statusCode int, logMessage string, status string) *AppErrorResponse {
+func NewAppErrorResponse(code string, statusCode int, logMessage string, status string) *AppErrorResponse {
 	message, ok := ErrorCodeMap[code]
 
 	if !ok {
@@ -43,10 +41,10 @@ func NewAppErrorResponse(c *fiber.Ctx, code string, statusCode int, logMessage s
 
 	return &AppErrorResponse{
 		Details: DetailResponse{
-			Path:       c.Path(),
-			Param:      string(c.Request().URI().QueryString()),
+			Path:       "",
+			Param:      "",
 			StatusCode: statusCode,
-			Method:     c.Method(),
+			Method:     "",
 			Status:     status,
 		},
 		Success:    false,
@@ -57,101 +55,109 @@ func NewAppErrorResponse(c *fiber.Ctx, code string, statusCode int, logMessage s
 	}
 }
 
-func UserNotFound(c *fiber.Ctx, logMessage string) *AppErrorResponse {
-	return NewAppErrorResponse(c, "USER_NOT_FOUND", http.StatusNotFound, logMessage, string(pkg.ApiStatusErrorNotFound))
+func UserNotFound(logMessage string) *AppErrorResponse {
+	return NewAppErrorResponse("USER_NOT_FOUND", http.StatusNotFound, logMessage, string(pkg.ApiStatusErrorNotFound))
 }
 
-func InvalidCredential(c *fiber.Ctx, logMessage string) *AppErrorResponse {
-	return NewAppErrorResponse(c, "INVALID_CREDENTIAL", http.StatusUnauthorized, logMessage, string(pkg.ApiStatusErrorUnauthorized))
+func InvalidCredential(logMessage string) *AppErrorResponse {
+	return NewAppErrorResponse("INVALID_CREDENTIAL", http.StatusUnauthorized, logMessage, string(pkg.ApiStatusErrorUnauthorized))
 }
 
-func DatabaseError(c *fiber.Ctx, logMessage string) *AppErrorResponse {
-	return NewAppErrorResponse(c, "DB_ERROR", http.StatusInternalServerError, logMessage, string(pkg.ApiStatusErrorInternalServerError))
+func DatabaseError(logMessage string) *AppErrorResponse {
+	return NewAppErrorResponse("DB_ERROR", http.StatusInternalServerError, logMessage, string(pkg.ApiStatusErrorInternalServerError))
 }
 
-func InternalError(c *fiber.Ctx, logMessage string) *AppErrorResponse {
-	return NewAppErrorResponse(c, "INTERNAL_ERROR", http.StatusInternalServerError, logMessage, string(pkg.ApiStatusErrorInternalServerError))
+func InternalError(logMessage string) *AppErrorResponse {
+	return NewAppErrorResponse("INTERNAL_ERROR", http.StatusInternalServerError, logMessage, string(pkg.ApiStatusErrorInternalServerError))
 }
 
-func RoleNotFound(c *fiber.Ctx, logMessage string) *AppErrorResponse {
-	return NewAppErrorResponse(c, "ROLE_NOT_FOUND", http.StatusNotFound, logMessage, string(pkg.ApiStatusErrorNotFound))
+func RoleNotFound(logMessage string) *AppErrorResponse {
+	return NewAppErrorResponse("ROLE_NOT_FOUND", http.StatusNotFound, logMessage, string(pkg.ApiStatusErrorNotFound))
 }
 
-func PermissionDenied(c *fiber.Ctx, logMessage string) *AppErrorResponse {
-	return NewAppErrorResponse(c, "PERMISSION_DENIED", http.StatusForbidden, logMessage, string(pkg.ApiStatusErrorForbidden))
+func RoleValidationFailed(logMessage string) *AppErrorResponse {
+	return NewAppErrorResponse("ROLE_VALDATION_FAILED", http.StatusInternalServerError, logMessage, string(pkg.ApiStatusErrorInternalServerError))
 }
 
-func InvalidInput(c *fiber.Ctx, logMessage string) *AppErrorResponse {
-	return NewAppErrorResponse(c, "INVALID_INPUT", http.StatusBadRequest, logMessage, string(pkg.ApiStatusErrorBadRequest))
+func PermissionDenied(logMessage string) *AppErrorResponse {
+	return NewAppErrorResponse("PERMISSION_DENIED", http.StatusForbidden, logMessage, string(pkg.ApiStatusErrorForbidden))
 }
 
-func EmailAlreadyExists(c *fiber.Ctx, logMessage string) *AppErrorResponse {
-	return NewAppErrorResponse(c, "EMAIL_ALREADY_EXISTS", http.StatusConflict, logMessage, string(pkg.ApiStatusErrorConflict))
+func InvalidInput(logMessage string) *AppErrorResponse {
+	return NewAppErrorResponse("INVALID_INPUT", http.StatusBadRequest, logMessage, string(pkg.ApiStatusErrorBadRequest))
 }
 
-func PhoneAlreadyExists(c *fiber.Ctx, logMessage string) *AppErrorResponse {
-	return NewAppErrorResponse(c, "PHONE_ALREADY_EXISTS", http.StatusConflict, logMessage, string(pkg.ApiStatusErrorConflict))
+func EmailAlreadyExists(logMessage string) *AppErrorResponse {
+	return NewAppErrorResponse("EMAIL_ALREADY_EXISTS", http.StatusConflict, logMessage, string(pkg.ApiStatusErrorConflict))
 }
 
-func Unauthorized(c *fiber.Ctx, logMessage string) *AppErrorResponse {
-	return NewAppErrorResponse(c, "UNAUTHORIZED", http.StatusUnauthorized, logMessage, string(pkg.ApiStatusErrorUnauthorized))
+func UsernameAlreadyExists(logMessage string) *AppErrorResponse {
+	return NewAppErrorResponse("USERNAME_ALREADY_EXISTS", http.StatusConflict, logMessage, string(pkg.ApiStatusErrorConflict))
 }
 
-func ResourceNotFound(c *fiber.Ctx, logMessage string) *AppErrorResponse {
-	return NewAppErrorResponse(c, "RESOURCE_NOT_FOUND", http.StatusNotFound, logMessage, string(pkg.ApiStatusErrorNotFound))
+func PhoneAlreadyExists(logMessage string) *AppErrorResponse {
+	return NewAppErrorResponse("PHONE_ALREADY_EXISTS", http.StatusConflict, logMessage, string(pkg.ApiStatusErrorConflict))
 }
 
-func InvalidToken(c *fiber.Ctx, logMessage string) *AppErrorResponse {
-	return NewAppErrorResponse(c, "INVALID_TOKEN", http.StatusUnauthorized, logMessage, string(pkg.ApiStatusErrorUnauthorized))
+func Unauthorized(logMessage string) *AppErrorResponse {
+	return NewAppErrorResponse("UNAUTHORIZED", http.StatusUnauthorized, logMessage, string(pkg.ApiStatusErrorUnauthorized))
 }
 
-func PasswordMismatch(c *fiber.Ctx, logMessage string) *AppErrorResponse {
-	return NewAppErrorResponse(c, "PASSWORD_MISMATCH", http.StatusBadRequest, logMessage, string(pkg.ApiStatusErrorBadRequest))
+func ResourceNotFound(logMessage string) *AppErrorResponse {
+	return NewAppErrorResponse("RESOURCE_NOT_FOUND", http.StatusNotFound, logMessage, string(pkg.ApiStatusErrorNotFound))
 }
 
-func UserAlreadyExists(c *fiber.Ctx, logMessage string) *AppErrorResponse {
-	return NewAppErrorResponse(c, "USER_ALREADY_EXISTS", http.StatusConflict, logMessage, string(pkg.ApiStatusErrorConflict))
+func InvalidToken(logMessage string) *AppErrorResponse {
+	return NewAppErrorResponse("INVALID_TOKEN", http.StatusUnauthorized, logMessage, string(pkg.ApiStatusErrorUnauthorized))
 }
 
-func RoleAlreadyExists(c *fiber.Ctx, logMessage string) *AppErrorResponse {
-	return NewAppErrorResponse(c, "ROLE_ALREADY_EXISTS", http.StatusConflict, logMessage, string(pkg.ApiStatusErrorConflict))
+func PasswordMismatch(logMessage string) *AppErrorResponse {
+	return NewAppErrorResponse("PASSWORD_MISMATCH", http.StatusBadRequest, logMessage, string(pkg.ApiStatusErrorBadRequest))
 }
 
-func EmailNotVerified(c *fiber.Ctx, logMessage string) *AppErrorResponse {
-	return NewAppErrorResponse(c, "EMAIL_NOT_VERIFIED", http.StatusForbidden, logMessage, string(pkg.ApiStatusErrorForbidden))
+func UserAlreadyExists(logMessage string) *AppErrorResponse {
+	return NewAppErrorResponse("USER_ALREADY_EXISTS", http.StatusConflict, logMessage, string(pkg.ApiStatusErrorConflict))
 }
 
-func PhoneNotVerified(c *fiber.Ctx, logMessage string) *AppErrorResponse {
-	return NewAppErrorResponse(c, "PHONE_NOT_VERIFIED", http.StatusForbidden, logMessage, string(pkg.ApiStatusErrorForbidden))
+func RoleAlreadyExists(logMessage string) *AppErrorResponse {
+	return NewAppErrorResponse("ROLE_ALREADY_EXISTS", http.StatusConflict, logMessage, string(pkg.ApiStatusErrorConflict))
 }
 
-func AccountLocked(c *fiber.Ctx, logMessage string) *AppErrorResponse {
-	return NewAppErrorResponse(c, "ACCOUNT_LOCKED", http.StatusForbidden, logMessage, string(pkg.ApiStatusErrorForbidden))
+func EmailNotVerified(logMessage string) *AppErrorResponse {
+	return NewAppErrorResponse("EMAIL_NOT_VERIFIED", http.StatusForbidden, logMessage, string(pkg.ApiStatusErrorForbidden))
 }
 
-func TooManyRequests(c *fiber.Ctx, logMessage string) *AppErrorResponse {
-	return NewAppErrorResponse(c, "TOO_MANY_REQUESTS", http.StatusTooManyRequests, logMessage, string(pkg.ApiStatusErrorTooManyRequests))
+func PhoneNotVerified(logMessage string) *AppErrorResponse {
+	return NewAppErrorResponse("PHONE_NOT_VERIFIED", http.StatusForbidden, logMessage, string(pkg.ApiStatusErrorForbidden))
 }
 
-func InvalidFileType(c *fiber.Ctx, logMessage string) *AppErrorResponse {
-	return NewAppErrorResponse(c, "INVALID_FILE_TYPE", http.StatusBadRequest, logMessage, string(pkg.ApiStatusErrorBadRequest))
+func AccountLocked(logMessage string) *AppErrorResponse {
+	return NewAppErrorResponse("ACCOUNT_LOCKED", http.StatusForbidden, logMessage, string(pkg.ApiStatusErrorForbidden))
 }
 
-func FileTooLarge(c *fiber.Ctx, logMessage string) *AppErrorResponse {
-	return NewAppErrorResponse(c, "FILE_TOO_LARGE", http.StatusBadRequest, logMessage, string(pkg.ApiStatusErrorBadRequest))
+func TooManyRequests(logMessage string) *AppErrorResponse {
+	return NewAppErrorResponse("TOO_MANY_REQUESTS", http.StatusTooManyRequests, logMessage, string(pkg.ApiStatusErrorTooManyRequests))
 }
 
-func OperationNotAllowed(c *fiber.Ctx, logMessage string) *AppErrorResponse {
-	return NewAppErrorResponse(c, "OPERATION_NOT_ALLOWED", http.StatusMethodNotAllowed, logMessage, string(pkg.ApiStatusErrorMethodNotAllowed))
+func InvalidFileType(logMessage string) *AppErrorResponse {
+	return NewAppErrorResponse("INVALID_FILE_TYPE", http.StatusBadRequest, logMessage, string(pkg.ApiStatusErrorBadRequest))
 }
 
-func ResourceConflict(c *fiber.Ctx, logMessage string) *AppErrorResponse {
-	return NewAppErrorResponse(c, "RESOURCE_CONFLICT", http.StatusConflict, logMessage, string(pkg.ApiStatusErrorConflict))
+func FileTooLarge(logMessage string) *AppErrorResponse {
+	return NewAppErrorResponse("FILE_TOO_LARGE", http.StatusBadRequest, logMessage, string(pkg.ApiStatusErrorBadRequest))
 }
-func InvalidRequest(c *fiber.Ctx, logMessage string) *AppErrorResponse {
-	return NewAppErrorResponse(c, "INVALID_REQUEST", http.StatusBadRequest, logMessage, string(pkg.ApiStatusErrorBadRequest))
+
+func OperationNotAllowed(logMessage string) *AppErrorResponse {
+	return NewAppErrorResponse("OPERATION_NOT_ALLOWED", http.StatusMethodNotAllowed, logMessage, string(pkg.ApiStatusErrorMethodNotAllowed))
 }
-func InvalidRequestWithMessage(c *fiber.Ctx, message string) *AppErrorResponse {
+
+func ResourceConflict(logMessage string) *AppErrorResponse {
+	return NewAppErrorResponse("RESOURCE_CONFLICT", http.StatusConflict, logMessage, string(pkg.ApiStatusErrorConflict))
+}
+func InvalidRequest(logMessage string) *AppErrorResponse {
+	return NewAppErrorResponse("INVALID_REQUEST", http.StatusBadRequest, logMessage, string(pkg.ApiStatusErrorBadRequest))
+}
+func InvalidRequestWithMessage(message string) *AppErrorResponse {
 	return &AppErrorResponse{
 		Details: DetailResponse{
 			Path:       "",
@@ -167,7 +173,7 @@ func InvalidRequestWithMessage(c *fiber.Ctx, message string) *AppErrorResponse {
 	}
 }
 
-func InvalidRequestWithCode(c *fiber.Ctx, code string) *AppErrorResponse {
+func InvalidRequestWithCode(code string) *AppErrorResponse {
 	return &AppErrorResponse{
 		Details: DetailResponse{
 			Path:       "",
@@ -183,7 +189,7 @@ func InvalidRequestWithCode(c *fiber.Ctx, code string) *AppErrorResponse {
 	}
 }
 
-func InvalidRequestWithCodeAndMessage(c *fiber.Ctx, code, message string) *AppErrorResponse {
+func InvalidRequestWithCodeAndMessage(code, message string) *AppErrorResponse {
 	return &AppErrorResponse{
 		Details: DetailResponse{
 			Path:       "",
@@ -199,7 +205,7 @@ func InvalidRequestWithCodeAndMessage(c *fiber.Ctx, code, message string) *AppEr
 	}
 }
 
-func InvalidRequestWithCodeMessageAndStatus(c *fiber.Ctx, code, message string, status int) *AppErrorResponse {
+func InvalidRequestWithCodeMessageAndStatus(code, message string, status int) *AppErrorResponse {
 	return &AppErrorResponse{
 		Details: DetailResponse{
 			Path:       "",

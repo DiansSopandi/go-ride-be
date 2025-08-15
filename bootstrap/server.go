@@ -32,9 +32,13 @@ func ServerInitialize() {
 		os.Exit(0)
 	}()
 
+	// global error handler
 	app := fiber.New(fiber.Config{
 		ErrorHandler: middlewares.ErrorHandler,
 	})
+
+	// global middleware panic handler
+	app.Use(middlewares.GlobalRecoveryMiddleware)
 
 	app.Use(cors.New(cors.Config{
 		AllowOrigins: "http://example.com, http://localhost:3000",

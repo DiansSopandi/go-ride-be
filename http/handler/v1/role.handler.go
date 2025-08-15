@@ -2,11 +2,12 @@ package handler
 
 import (
 	"database/sql"
+	"fmt"
 
 	"github.com/DiansSopandi/goride_be/dto"
+	"github.com/DiansSopandi/goride_be/errors"
 	"github.com/DiansSopandi/goride_be/middlewares"
 	"github.com/DiansSopandi/goride_be/models"
-	model "github.com/DiansSopandi/goride_be/models"
 	"github.com/DiansSopandi/goride_be/pkg"
 	"github.com/DiansSopandi/goride_be/repository"
 	service "github.com/DiansSopandi/goride_be/services"
@@ -37,11 +38,7 @@ func GetAllRolesHandler(handler *RoleHandler) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		roles, err := handler.GetAllRoles()
 		if err != nil {
-			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-				"message": err.Error(),
-				"status":  fiber.StatusInternalServerError,
-				"data":    nil,
-			})
+			return errors.InternalError(fmt.Sprintf("Failed to fetch roles: %v", err))
 		}
 
 		// return c.Status(fiber.StatusOK).JSON(fiber.Map{
@@ -58,13 +55,6 @@ func CreateRoleHandler(handler *RoleHandler) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		var createRoledto dto.RoleCreateRequest
 
-		// if err := c.BodyParser(&createRoledto); err != nil {
-		// 	return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-		// 		"message": err.Error(),
-		// 		"status":  fiber.StatusBadRequest,
-		// 		"data":    nil,
-		// 	})
-		// }
 		if err := c.BodyParser(&createRoledto); err != nil {
 			return fiber.NewError(fiber.StatusBadRequest, err.Error())
 		}
@@ -72,14 +62,12 @@ func CreateRoleHandler(handler *RoleHandler) fiber.Handler {
 		res, err := handler.CreateRole(c, &createRoledto)
 
 		if err != nil {
-			return fiber.NewError(fiber.StatusInternalServerError, err.Error())
+			// return fiber.NewError(fiber.StatusInternalServerError, err.Error())
+			return errors.InternalError(fmt.Sprintf("Failed to create role: %v", err))
+
 		}
-		return c.Status(fiber.StatusOK).JSON(fiber.Map{
-			"message": "Role created successfully",
-			"status":  fiber.StatusOK,
-			"success": true,
-			"data":    res,
-		})
+
+		return pkg.ResponseApiOK(c, "Role created successfully", res)
 	}
 }
 
@@ -109,10 +97,7 @@ func (h *RoleHandler) CreateRole(c *fiber.Ctx, roleDto *dto.RoleCreateRequest) (
 	tx := c.Locals(middlewares.TxContextKey).(*sql.Tx)
 	// isTx := tx != nil
 	// roleRepo, err := repository.NewRoleRepository(isTx)
-	roleRepo, err := repository.NewRoleRepository(tx)
-	if err != nil {
-		return model.Role{}, err
-	}
+	roleRepo, _ := repository.NewRoleRepository(tx)
 
 	role := models.Role{
 		Name:        roleDto.Name,

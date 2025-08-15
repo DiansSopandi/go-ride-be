@@ -5,21 +5,11 @@ import (
 	"fmt"
 
 	"github.com/DiansSopandi/goride_be/dto"
+	"github.com/DiansSopandi/goride_be/errors"
 	"github.com/DiansSopandi/goride_be/models"
 	"github.com/DiansSopandi/goride_be/pkg/utils"
 	"github.com/DiansSopandi/goride_be/repository"
 )
-
-// type GalleryService struct {
-// 	repo *repositories.GalleryRepository
-// }
-
-// func NewGalleryService() *GalleryService {
-// 	return &GalleryService{
-// 		// Initialize any dependencies or configurations here
-// 		repo: repositories.NewGalleryRepository(),
-// 	}
-// }
 
 type UserService struct {
 	UserRepo *repository.UserRepository
@@ -56,25 +46,25 @@ func (s *UserService) CreateUser(tx *sql.Tx, createUserDto *dto.UserCreateReques
 
 	exists, err := s.UserRepo.CheckUsernameExistsWithTx(tx, user.Username)
 	if err != nil {
-		return models.User{}, fmt.Errorf("failed to check username: %w", err)
+		return models.User{}, errors.InternalError(fmt.Sprintf("failed to check username: %v", err))
 	}
 
 	if exists {
-		return models.User{}, fmt.Errorf("username already exists")
+		return models.User{}, errors.UsernameAlreadyExists("username already exists")
 	}
 
 	exists, err = s.UserRepo.CheckEmailExistsWithTx(tx, user.Email)
 	if err != nil {
-		return models.User{}, fmt.Errorf("failed to check email: %w", err)
+		return models.User{}, errors.InternalError(fmt.Sprintf("failed to check email: %v", err))
 	}
 
 	if exists {
-		return models.User{}, fmt.Errorf("email already exists")
+		return models.User{}, errors.EmailAlreadyExists("username already exists")
 	}
 
 	res, err := s.UserRepo.CreateUser(tx, &user)
 	if err != nil {
-		return models.User{}, err
+		return models.User{}, errors.InternalError(fmt.Sprintf("failed to create user: %v", err))
 	}
 
 	return res, nil
@@ -85,25 +75,33 @@ func (s *UserService) LoginUser(tx *sql.Tx, loginDto dto.UserLoginRequest) (dto.
 
 	user, errUser := s.UserRepo.GetUserByEmail(loginDto.Email)
 	if errUser != nil {
-		return dto.UserLoginResponse{}, fmt.Errorf("failed to get user by email: %w", errUser)
+		return dto.UserLoginResponse{}, errors.InternalError(fmt.Sprintf("failed to get user by email: %v", errUser))
+	}
+
+	if user == nil {
+		return dto.UserLoginResponse{}, errors.UserNotFound("user not found")
+	}
+
+	if !utils.CheckPasswordHash(loginDto.Password, user.Password) {
+		return dto.UserLoginResponse{}, errors.InvalidCredential("invalid email or password")
 	}
 
 	role, errRole := s.RoleRepo.GetRoleByUserID(int(user.ID))
 	if errRole != nil {
-		return dto.UserLoginResponse{}, fmt.Errorf("failed to get role by user ID: %w", errRole)
+		return dto.UserLoginResponse{}, errors.InternalError(fmt.Sprintf("failed to get role by user id: %v", errRole))
+	}
+
+	if role == nil {
+		return dto.UserLoginResponse{}, errors.RoleNotFound("role not found")
 	}
 
 	for _, r := range role {
 		roleNames = append(roleNames, r.Name)
 	}
 
-	if user == nil || !utils.CheckPasswordHash(loginDto.Password, user.Password) {
-		return dto.UserLoginResponse{}, fmt.Errorf("invalid email or password")
-	}
-
 	token, err := utils.GenerateJWT(user.ID, user.Email)
 	if err != nil {
-		return dto.UserLoginResponse{}, fmt.Errorf("failed to generate token: %w", err)
+		return dto.UserLoginResponse{}, errors.InternalError(fmt.Sprintf("failed to generate token: %v", err))
 	}
 
 	// userMap := map[string]interface{}{}

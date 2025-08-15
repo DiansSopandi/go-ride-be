@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/DiansSopandi/goride_be/dto"
+	"github.com/DiansSopandi/goride_be/errors"
 	"github.com/DiansSopandi/goride_be/middlewares"
 	"github.com/DiansSopandi/goride_be/pkg"
 	helper "github.com/DiansSopandi/goride_be/pkg/helper"
@@ -41,7 +42,8 @@ func RegisterUserHandler(handler *AuthHandler) fiber.Handler {
 		res, err := handler.RegisterUser(c, registerDto)
 		if err != nil {
 			// return pkg.ResponseApiError(c, fiber.StatusInternalServerError, "Failed to register user", err)
-			return fiber.NewError(fiber.StatusInternalServerError, err.Error())
+			// return fiber.NewError(fiber.StatusInternalServerError, err.Error())
+			return err
 		}
 
 		return pkg.ResponseApiOK(c, "User registered successfully...", res)
@@ -57,7 +59,8 @@ func LoginUserHandler(handler *AuthHandler) fiber.Handler {
 
 		res, err := handler.LoginUser(c, loginDto)
 		if err != nil {
-			return fiber.NewError(fiber.StatusInternalServerError, err.Error())
+			// return fiber.NewError(fiber.StatusInternalServerError, err.Error())
+			return err
 		}
 
 		return pkg.ResponseApiOK(c, "User logged in successfully...", res)
@@ -90,7 +93,7 @@ func (h *AuthHandler) RegisterUser(c *fiber.Ctx, regDto dto.UserRegisterRequest)
 		roleIDs, err = userServiceWithTx.ValidateRolesExist(tx, regDto.Roles)
 
 		if err != nil {
-			return dto.UserResponse{}, fmt.Errorf("role validation failed: %w", err)
+			return dto.UserResponse{}, errors.RoleValidationFailed(fmt.Sprintf("role validation failed: %v", err))
 		}
 	}
 
@@ -109,7 +112,7 @@ func (h *AuthHandler) RegisterUser(c *fiber.Ctx, regDto dto.UserRegisterRequest)
 	if len(roleIDs) > 0 {
 		err = userServiceWithTx.AssignRolesToUserWithTx(tx, uint(res.ID), roleIDs)
 		if err != nil {
-			return dto.UserResponse{}, err
+			return dto.UserResponse{}, errors.InternalError(fmt.Sprintf("failed to assign roles to user: %v", err))
 		}
 	}
 
@@ -141,7 +144,7 @@ func (h *AuthHandler) LoginUser(c *fiber.Ctx, loginDto dto.UserLoginRequest) (dt
 
 	res, err := userServiceWithTx.LoginUser(tx, loginDto)
 	if err != nil {
-		return dto.UserLoginResponse{}, fmt.Errorf("login failed: %w", err)
+		return dto.UserLoginResponse{}, err
 	}
 
 	return res, nil

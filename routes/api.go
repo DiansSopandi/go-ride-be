@@ -17,12 +17,6 @@ func SetupRoutes(app *fiber.App) {
 	handler.UserRoutes(api)
 	handler.AuthRoutes(auth)
 
-	// api.Get("/", func(c *fiber.Ctx) error {
-	// 	return handlers.RootHandler(c)
-	// })
-	// Route untuk Swagger UI
-	// app.Get("/swagger/*", swagger.HandlerDefault) // akses di /swagger/index.html
-
 	// Route untuk favicon.ico
 	// app.Static("/favicon.ico", "./public/favicon.ico")
 }
