@@ -3,6 +3,7 @@ package handler
 import (
 	"database/sql"
 	"fmt"
+	"time"
 
 	"github.com/DiansSopandi/goride_be/dto"
 	"github.com/DiansSopandi/goride_be/errors"
@@ -146,6 +147,32 @@ func (h *AuthHandler) LoginUser(c *fiber.Ctx, loginDto dto.UserLoginRequest) (dt
 	if err != nil {
 		return dto.UserLoginResponse{}, err
 	}
+
+	// Set cookie Access Token
+	c.Cookie(&fiber.Cookie{
+		Name:  "jwt_at",
+		Value: res.AccessToken,
+		// Expires:  time.Now().Add(15 * time.Minute),
+		Expires:  time.Now().Add(24 * time.Hour),
+		HTTPOnly: true,
+		Secure:   true,
+		SameSite: "Strict",
+		Path:     "/",
+	})
+
+	// Set cookie Refresh Token
+	c.Cookie(&fiber.Cookie{
+		Name:     "jwt_rt",
+		Value:    res.RefreshToken,
+		Expires:  time.Now().Add(7 * 24 * time.Hour),
+		HTTPOnly: true,
+		Secure:   true,
+		SameSite: "Strict",
+		Path:     "/",
+	})
+
+	// Set Authorization header
+	c.Set("Authorization", "Bearer "+res.AccessToken)
 
 	return res, nil
 }

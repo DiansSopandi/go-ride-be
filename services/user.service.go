@@ -99,7 +99,7 @@ func (s *UserService) LoginUser(tx *sql.Tx, loginDto dto.UserLoginRequest) (dto.
 		roleNames = append(roleNames, r.Name)
 	}
 
-	token, err := utils.GenerateJWT(user.ID, user.Email)
+	accessToken, refreshToken, err := utils.GenerateJWT(user.ID, user.Email)
 	if err != nil {
 		return dto.UserLoginResponse{}, errors.InternalError(fmt.Sprintf("failed to generate token: %v", err))
 	}
@@ -117,8 +117,9 @@ func (s *UserService) LoginUser(tx *sql.Tx, loginDto dto.UserLoginRequest) (dto.
 	}
 
 	return dto.UserLoginResponse{
-		User:  userResponse,
-		Token: token,
+		User:         userResponse,
+		AccessToken:  accessToken,
+		RefreshToken: refreshToken,
 	}, nil
 }
 

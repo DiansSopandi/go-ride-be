@@ -40,6 +40,8 @@ func ServerInitialize() {
 	// global middleware panic handler
 	app.Use(middlewares.GlobalRecoveryMiddleware)
 
+	app.Use(middlewares.JwtAuthGuard)
+
 	app.Use(cors.New(cors.Config{
 		AllowOrigins: "http://example.com, http://localhost:3000",
 		AllowMethods: "GET,POST,PUT,PATCH,DELETE",

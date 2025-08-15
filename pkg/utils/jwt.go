@@ -7,24 +7,37 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-func GenerateJWT(userID int, email string) (string, error) {
-	claims := jwt.MapClaims{
+func GenerateJWT(userID int, email string) (string, string, error) {
+	atClaims := jwt.MapClaims{
+		"sub":   userID,
+		"email": email,
+		"exp":   time.Now().Add(24 * time.Minute).Unix(), // Token expires in 24 hours jwt.TimeFunc().Add(time.Hour * 24).Unix(),
+		"type":  "access_token",
+	}
+	rtClaims := jwt.MapClaims{
 		"user_id": userID,
 		"email":   email,
-		"exp":     time.Now().Add(time.Hour * 24).Unix(), // Token expires in 24 hours jwt.TimeFunc().Add(time.Hour * 24).Unix(),
+		"exp":     time.Now().Add(7 * 24 * time.Hour).Unix(), // Token expires in 7 * 24 hours jwt.TimeFunc().Add(time.Hour * 24).Unix(),
+		"type":    "refresh_token",
+		// "exp":     time.Now().Add(time.Hour * 24).Unix(), // Token expires in 24 hours jwt.TimeFunc().Add(time.Hour * 24).Unix(),
 	}
 
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	jwtSecret := pkg.Cfg.Application.JwtSecretKey
+	atToken := jwt.NewWithClaims(jwt.SigningMethodHS256, atClaims)
+	rtToken := jwt.NewWithClaims(jwt.SigningMethodHS256, rtClaims)
 
 	// jwtSecret := pkg.Cfg.Application.JwtSecret
 	// SigningKey: jwtware.SigningKey{Key: []byte(pkg.Cfg.Application.SsoJwtSecret)},
 
-	jwtSecret := pkg.Cfg.Application.JwtSecretKey
-	signedToken, signErr := token.SignedString([]byte(jwtSecret))
-
-	if signErr != nil {
-		return "", signErr
+	accessToken, err := atToken.SignedString([]byte(jwtSecret))
+	if err != nil {
+		return "", "", err
 	}
 
-	return signedToken, nil
+	refreshToken, err := rtToken.SignedString([]byte(jwtSecret))
+	if err != nil {
+		return "", "", err
+	}
+
+	return accessToken, refreshToken, nil
 }
