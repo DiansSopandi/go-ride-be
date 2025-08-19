@@ -3,6 +3,7 @@ package handler
 import (
 	"database/sql"
 	"fmt"
+	"time"
 
 	"github.com/DiansSopandi/goride_be/dto"
 	"github.com/DiansSopandi/goride_be/errors"
@@ -33,9 +34,14 @@ func NewUserHandler() *UserHandler {
 
 func UserRoutes(route fiber.Router) {
 	handler := NewUserHandler()
+	limiter := middlewares.NewRateLimiter()
 
-	route.Get("/users", GetUserHandler(handler))
-	route.Post("/users", middlewares.WithTransaction(CreateUserHandler(handler)))
+	limit := pkg.Cfg.Application.DefaultMaxRequestPerMinute
+	duration := time.Minute
+	// route.Get("/users", middlewares.RateLimitMiddleware(&limit, &duration), GetUserHandler(handler))
+	route.Get("/users", limiter.RateLimitMiddleware(&limit, &duration), GetUserHandler(handler))
+	// route.Post("/users", middlewares.RateLimitMiddleware(&limit, &duration), middlewares.WithTransaction(CreateUserHandler(handler)))
+	route.Post("/users", limiter.RateLimitMiddleware(&limit, &duration), middlewares.WithTransaction(CreateUserHandler(handler)))
 }
 
 func CreateUserHandler(handler *UserHandler) fiber.Handler {
@@ -69,6 +75,9 @@ func CreateUserHandler(handler *UserHandler) fiber.Handler {
 
 func GetUserHandler(handler *UserHandler) fiber.Handler {
 	return func(c *fiber.Ctx) error {
+		// claims := c.Locals("user").(jwt.MapClaims)
+		// userID := fmt.Sprintf("%v", claims["sub"])
+
 		res, err := handler.GetUser()
 
 		if err != nil {

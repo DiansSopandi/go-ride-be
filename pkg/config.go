@@ -20,34 +20,44 @@ type DatabaseConfig struct {
 	MaxOpenConn int    `mapstructure:"max_open_conn"`
 }
 
+type RedisConfig struct {
+	Host     string `mapstructure:"redis_host"`
+	Port     int    `mapstructure:"redis_port"`
+	Password string `mapstructure:"redis_password"`
+	DB       int    `mapstructure:"redis_db"`
+}
+
 type ApplicationConfig struct {
-	Name                    string `mapstructure:"name"`
-	Version                 string `mapstructure:"version"`
-	Env                     string `mapstructure:"env"`
-	Host                    string `mapstructure:"host"`
-	AppPort                 int    `mapstructure:"app_port"`
-	AppUrl                  string `mapstructure:"app_url"`
-	AppPath                 string `mapstructure:"app_path"`
-	RedirectPath            string `mapstructure:"redirect_path"`
-	WsUrl                   string `mapstructure:"ws_url"`
-	Timezone                string `mapstructure:"timezone"`
-	EnableLog               bool   `mapstructure:"enable_log"`
-	EnableLogToFile         bool   `mapstructure:"enable_log_to_file"`
-	LogPath                 string `mapstructure:"log_path"`
-	Prefork                 bool   `mapstructure:"prefork"`
-	AllowOrigins            string `mapstructure:"allow_origins"`
-	AllowHeaders            string `mapstructure:"allow_headers"`
-	AllowMethods            string `mapstructure:"allow_methods"`
-	EnableTrustedProxyCheck bool   `mapstructure:"enable_trusted_proxy_check"`
-	EnableCache             bool   `mapstructure:"enable_cache"`
-	AppKey                  string `mapstructure:"app_key"`
-	JwtSecretKey            string `mapstructure:"jwt_secret_key"`
-	SsoJwtSecret            string `mapstructure:"sso_jwt_secret"`
-	FilePath                string `mapstructure:"file_path"`
+	Name                       string `mapstructure:"name"`
+	Version                    string `mapstructure:"version"`
+	Env                        string `mapstructure:"env"`
+	Host                       string `mapstructure:"host"`
+	AppPort                    int    `mapstructure:"app_port"`
+	AppUrl                     string `mapstructure:"app_url"`
+	AppPath                    string `mapstructure:"app_path"`
+	RedirectPath               string `mapstructure:"redirect_path"`
+	WsUrl                      string `mapstructure:"ws_url"`
+	Timezone                   string `mapstructure:"timezone"`
+	EnableLog                  bool   `mapstructure:"enable_log"`
+	EnableLogToFile            bool   `mapstructure:"enable_log_to_file"`
+	LogPath                    string `mapstructure:"log_path"`
+	Prefork                    bool   `mapstructure:"prefork"`
+	AllowOrigins               string `mapstructure:"allow_origins"`
+	AllowHeaders               string `mapstructure:"allow_headers"`
+	AllowMethods               string `mapstructure:"allow_methods"`
+	EnableTrustedProxyCheck    bool   `mapstructure:"enable_trusted_proxy_check"`
+	EnableCache                bool   `mapstructure:"enable_cache"`
+	AppKey                     string `mapstructure:"app_key"`
+	JwtSecretKey               string `mapstructure:"jwt_secret_key"`
+	SsoJwtSecret               string `mapstructure:"sso_jwt_secret"`
+	FilePath                   string `mapstructure:"file_path"`
+	DefaultMaxRequestPerMinute int    `mapstructure:"default_max_requests_per_minute"`
+	// DefaultRequestDuration     time.Duration `mapstructure:"default_request_duration"`
 }
 
 type Config struct {
 	Database    DatabaseConfig    `mapstructure:"database"`
+	Redis       RedisConfig       `mapstructure:"redis"`
 	Application ApplicationConfig `mapstructure:"application"`
 	// SsoClientCredentials SsoClientCredentials  `mapstructure:"sso_client_credentials"`
 	// Email                EmailConfig           `mapstructure:"email"`

@@ -29,6 +29,7 @@ func ServerInitialize() {
 		<-c
 		fmt.Println("\n🔌 Closing database connection...")
 		db.CloseDB()
+		pkg.CloseRedis()
 		os.Exit(0)
 	}()
 
@@ -40,12 +41,19 @@ func ServerInitialize() {
 	// global middleware panic handler
 	app.Use(middlewares.GlobalRecoveryMiddleware)
 
+	// global guard JWT authentication middleware
 	app.Use(middlewares.JwtAuthGuard)
 
 	app.Use(cors.New(cors.Config{
 		AllowOrigins: "http://example.com, http://localhost:3000",
 		AllowMethods: "GET,POST,PUT,PATCH,DELETE",
 	}))
+
+	// middlewares.InitRateLimiter()
+	pkg.InitRedis()
+	// apply global rate limit middleware all routes
+	// duration := time.Minute
+	// app.Use(middlewares.RateLimitMiddleware(&pkg.Cfg.Application.DefaultMaxRequestPerMinute, &duration))
 
 	docs.SwaggerInfo.Title = "Swagger Example API"
 	docs.SwaggerInfo.Description = "This is a sample server for Go Ride API"
