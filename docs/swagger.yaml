@@ -44,7 +44,9 @@ definitions:
     type: object
   dto.UserLoginResponse:
     properties:
-      token:
+      access_token:
+        type: string
+      refresh_token:
         type: string
       user:
         $ref: '#/definitions/dto.UserResponse'
@@ -81,10 +83,6 @@ definitions:
     type: object
   dto.UserResponse:
     properties:
-      createdAt:
-        type: string
-      deletedAt:
-        type: string
       email:
         type: string
       id:
@@ -93,8 +91,6 @@ definitions:
         items:
           type: string
         type: array
-      updatedAt:
-        type: string
       username:
         type: string
     type: object
@@ -136,6 +132,15 @@ definitions:
         type: integer
       password:
         type: string
+      picture:
+        description: URL to the user's profile picture
+        type: string
+      provider:
+        description: e.g., "google", "local"
+        type: string
+      provider_id:
+        description: ID from the provider (e.g., Google ID)
+        type: string
       updated_at:
         type: string
       username:
@@ -143,6 +148,8 @@ definitions:
     type: object
 info:
   contact: {}
+  title: GoRide API
+  version: "1.0"
 paths:
   /v1:
     get:
@@ -163,6 +170,44 @@ paths:
       summary: Root Endpoint
       tags:
       - Root
+  /v1/auth/google/callback:
+    get:
+      description: Handles Google OAuth2 callback
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Google Callback
+      tags:
+      - Auth
+  /v1/auth/google/login:
+    get:
+      description: Initiates Google OAuth2 login
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Google Auth
+      tags:
+      - Auth
   /v1/auth/login:
     post:
       consumes:
@@ -193,6 +238,16 @@ paths:
             additionalProperties: true
             type: object
       summary: Login a user
+      tags:
+      - Auth
+  /v1/auth/logout:
+    post:
+      produces:
+      - application/json
+      responses: {}
+      security:
+      - BearerAuth: []
+      summary: Logout a user
       tags:
       - Auth
   /v1/auth/register:
@@ -241,6 +296,8 @@ paths:
             items:
               $ref: '#/definitions/models.Role'
             type: array
+      security:
+      - BearerAuth: []
       summary: GetAllRoles
       tags:
       - Role
@@ -262,6 +319,8 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/models.Role'
+      security:
+      - BearerAuth: []
       summary: CreateRole
       tags:
       - Role
@@ -281,6 +340,8 @@ paths:
           schema:
             additionalProperties: true
             type: object
+      security:
+      - BearerAuth: []
       summary: User Endpoint
       tags:
       - User
@@ -306,7 +367,15 @@ paths:
           schema:
             additionalProperties: true
             type: object
+      security:
+      - BearerAuth: []
       summary: User Endpoint
       tags:
       - User
+securityDefinitions:
+  BearerAuth:
+    description: Type "Bearer" followed by a space and JWT token.
+    in: header
+    name: Authorization
+    type: apiKey
 swagger: "2.0"

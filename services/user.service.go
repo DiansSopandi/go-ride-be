@@ -12,14 +12,16 @@ import (
 )
 
 type UserService struct {
-	UserRepo *repository.UserRepository
-	RoleRepo *repository.RoleRepository
+	UserRepo         *repository.UserRepository
+	RoleRepo         *repository.RoleRepository
+	UserProviderRepo *repository.UserProviderRepository
 }
 
-func NewUserService(userRepo *repository.UserRepository, roleRepo *repository.RoleRepository) *UserService {
+func NewUserService(userRepo *repository.UserRepository, roleRepo *repository.RoleRepository, userProviderRepo *repository.UserProviderRepository) *UserService {
 	return &UserService{
-		UserRepo: userRepo, // repository.NewUserRepository(),
-		RoleRepo: roleRepo, // Initialize RoleRepository if needed
+		UserRepo:         userRepo,         // repository.NewUserRepository(),
+		RoleRepo:         roleRepo,         // repository.NewRoleRepository(),
+		UserProviderRepo: userProviderRepo, // repository.NewUserProviderRepository(),
 	}
 }
 
@@ -39,9 +41,11 @@ func (s *UserService) GetAllUsers() ([]dto.UserResponse, error) {
 func (s *UserService) CreateUser(tx *sql.Tx, createUserDto *dto.UserCreateRequest) (models.User, error) {
 	password, _ := utils.HashPassword(createUserDto.Password)
 	user := models.User{
-		Username: createUserDto.Username,
-		Email:    createUserDto.Email,
-		Password: password,
+		Username:   createUserDto.Username,
+		Email:      createUserDto.Email,
+		Password:   password,
+		Provider:   "local",
+		ProviderID: nil,
 	}
 
 	exists, err := s.UserRepo.CheckUsernameExistsWithTx(tx, user.Username)
@@ -67,6 +71,14 @@ func (s *UserService) CreateUser(tx *sql.Tx, createUserDto *dto.UserCreateReques
 		return models.User{}, errors.InternalError(fmt.Sprintf("failed to create user: %v", err))
 	}
 
+	userProvider := &models.UserProvider{
+		UserID:        uint(res.ID),
+		Provider:      "local",
+		ProviderID:    fmt.Sprintf("%d", res.ID),
+		ProviderEmail: res.Email,
+	}
+
+	s.UserProviderRepo.CreateUserProvider(tx, userProvider)
 	return res, nil
 }
 
@@ -153,4 +165,57 @@ func (s *UserService) ValidateRolesExist(tx *sql.Tx, roleNames []string) ([]int6
 
 func (s *UserService) AssignRolesToUserWithTx(tx *sql.Tx, userID uint, roleIDs []int64) error {
 	return s.UserRepo.AssignRolesToUserWithTx(tx, userID, roleIDs)
+}
+
+func (s *UserService) UpsertGoogleUser(tx *sql.Tx, googleID, email, name, picture string) (*models.User, error) {
+	user, errUser := s.UserRepo.GetUserByEmail(email)
+	if errUser != nil && errUser != sql.ErrNoRows {
+		return nil, errUser
+	}
+
+	userProvider, errUserProvider := s.UserProviderRepo.GetUserByProviderID(googleID)
+	if errUserProvider != nil && errUserProvider != sql.ErrNoRows {
+		return nil, errUserProvider
+	}
+
+	if user != nil {
+		if userProvider == nil {
+			userProvider = &models.UserProvider{
+				UserID:        uint(user.ID),
+				Provider:      "google",
+				ProviderID:    googleID,
+				ProviderEmail: email,
+			}
+
+			if errCreateUserProvider := s.UserProviderRepo.CreateUserProvider(tx, userProvider); errCreateUserProvider != nil {
+				return nil, errCreateUserProvider
+			}
+		}
+	}
+
+	if user == nil {
+		user = &models.User{
+			Email:    email,
+			Username: name,
+			Picture:  picture,
+		}
+
+		user, err := s.UserRepo.CreateUser(tx, user)
+		if err != nil {
+			return nil, err
+		}
+
+		userProvider = &models.UserProvider{
+			UserID:        uint(user.ID),
+			Provider:      "google",
+			ProviderID:    googleID,
+			ProviderEmail: email,
+		}
+
+		if errCreateUserProvider := s.UserProviderRepo.CreateUserProvider(tx, userProvider); errCreateUserProvider != nil {
+			return nil, errCreateUserProvider
+		}
+	}
+
+	return user, nil
 }

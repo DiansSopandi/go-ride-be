@@ -43,6 +43,62 @@ const docTemplate = `{
                 }
             }
         },
+        "/v1/auth/google/callback": {
+            "get": {
+                "description": "Handles Google OAuth2 callback",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Google Callback",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/auth/google/login": {
+            "get": {
+                "description": "Initiates Google OAuth2 login",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Google Auth",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
         "/v1/auth/login": {
             "post": {
                 "description": "Login a user and return user details and token.",
@@ -89,6 +145,23 @@ const docTemplate = `{
                         }
                     }
                 }
+            }
+        },
+        "/v1/auth/logout": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Logout a user",
+                "responses": {}
             }
         },
         "/v1/auth/register": {
@@ -141,6 +214,11 @@ const docTemplate = `{
         },
         "/v1/roles": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Get all roles",
                 "consumes": [
                     "application/json"
@@ -165,6 +243,11 @@ const docTemplate = `{
                 }
             },
             "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Create a new role",
                 "consumes": [
                     "application/json"
@@ -199,6 +282,11 @@ const docTemplate = `{
         },
         "/v1/users": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "This user route returns a simple JSON response",
                 "produces": [
                     "application/json"
@@ -225,6 +313,11 @@ const docTemplate = `{
                 }
             },
             "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "This user route returns a simple JSON response",
                 "produces": [
                     "application/json"
@@ -327,7 +420,10 @@ const docTemplate = `{
         "dto.UserLoginResponse": {
             "type": "object",
             "properties": {
-                "token": {
+                "access_token": {
+                    "type": "string"
+                },
+                "refresh_token": {
                     "type": "string"
                 },
                 "user": {
@@ -378,12 +474,6 @@ const docTemplate = `{
         "dto.UserResponse": {
             "type": "object",
             "properties": {
-                "createdAt": {
-                    "type": "string"
-                },
-                "deletedAt": {
-                    "type": "string"
-                },
                 "email": {
                     "type": "string"
                 },
@@ -395,9 +485,6 @@ const docTemplate = `{
                     "items": {
                         "type": "string"
                     }
-                },
-                "updatedAt": {
-                    "type": "string"
                 },
                 "username": {
                     "type": "string"
@@ -449,6 +536,18 @@ const docTemplate = `{
                 "password": {
                     "type": "string"
                 },
+                "picture": {
+                    "description": "URL to the user's profile picture",
+                    "type": "string"
+                },
+                "provider": {
+                    "description": "e.g., \"google\", \"local\"",
+                    "type": "string"
+                },
+                "provider_id": {
+                    "description": "ID from the provider (e.g., Google ID)",
+                    "type": "string"
+                },
                 "updated_at": {
                     "type": "string"
                 },
@@ -457,16 +556,24 @@ const docTemplate = `{
                 }
             }
         }
+    },
+    "securityDefinitions": {
+        "BearerAuth": {
+            "description": "Type \"Bearer\" followed by a space and JWT token.",
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header"
+        }
     }
 }`
 
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
-	Version:          "",
+	Version:          "1.0",
 	Host:             "",
 	BasePath:         "",
 	Schemes:          []string{},
-	Title:            "",
+	Title:            "GoRide API",
 	Description:      "",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,

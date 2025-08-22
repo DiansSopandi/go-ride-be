@@ -5,7 +5,9 @@ import (
 	"log"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
+	"time"
 
 	"github.com/DiansSopandi/goride_be/db"
 	"github.com/DiansSopandi/goride_be/docs"
@@ -15,6 +17,14 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/swagger"
+	"golang.org/x/oauth2"
+)
+
+var (
+	oauthConfig     *oauth2.Config
+	appJWTSecret    []byte
+	frontendURL     string
+	appJWTExpiresIn time.Duration
 )
 
 func ServerInitialize() {
@@ -33,6 +43,12 @@ func ServerInitialize() {
 		os.Exit(0)
 	}()
 
+	expires := pkg.Cfg.Application.AppJWTAccessExpiresIn
+	if expires <= 0 {
+		expires = 3600
+	}
+	appJWTExpiresIn = time.Duration(expires) * time.Second
+
 	// global error handler
 	app := fiber.New(fiber.Config{
 		ErrorHandler: middlewares.ErrorHandler,
@@ -44,9 +60,13 @@ func ServerInitialize() {
 	// global guard JWT authentication middleware
 	app.Use(middlewares.JwtAuthGuard)
 
+	allowed := strings.Split(pkg.Cfg.Application.CorsOrigins, ",")
 	app.Use(cors.New(cors.Config{
-		AllowOrigins: "http://example.com, http://localhost:3000",
-		AllowMethods: "GET,POST,PUT,PATCH,DELETE",
+		// AllowOrigins: "http://example.com, http://localhost:3000",
+		AllowOrigins:     strings.Join(allowed, ","),
+		AllowCredentials: true,
+		AllowHeaders:     "*",
+		AllowMethods:     "GET,POST,PUT,PATCH,DELETE",
 	}))
 
 	// middlewares.InitRateLimiter()

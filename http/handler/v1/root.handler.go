@@ -4,6 +4,10 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
+func RootHandler(route fiber.Router) {
+	route.Get("/", GetRoot)
+}
+
 // RootHandler godoc
 // @Summary Root Endpoint
 // @Description This root route returns a simple JSON response
@@ -18,8 +22,4 @@ func GetRoot(c *fiber.Ctx) error {
 		"status":  "success",
 		"data":    nil,
 	})
-}
-
-func RootHandler(route fiber.Router) {
-	route.Get("/", GetRoot)
 }

@@ -53,6 +53,19 @@ type ApplicationConfig struct {
 	FilePath                   string `mapstructure:"file_path"`
 	DefaultMaxRequestPerMinute int    `mapstructure:"default_max_requests_per_minute"`
 	// DefaultRequestDuration     time.Duration `mapstructure:"default_request_duration"`
+	// ✅ GOOGLE OAUTH - Pastikan mapping ke quoted string
+	GoogleClientID     string `mapstructure:"google_client_id"`
+	GoogleClientSecret string `mapstructure:"google_client_secret"`
+	GoogleRedirectURI  string `mapstructure:"google_redirect_uri"`
+
+	// ✅ FRONTEND & CORS
+	FrontendURL  string   `mapstructure:"frontend_url"`
+	CorsOrigins  string   `mapstructure:"cors_origins"`
+	PublicRoutes []string `mapstructure:"public_routes"`
+
+	// ✅ JWT EXPIRATION (integers in seconds)
+	AppJWTAccessExpiresIn  int `mapstructure:"app_jwt_access_expires_in"`  // in seconds
+	AppJWTRefreshExpiresIn int `mapstructure:"app_jwt_refresh_expires_in"` // in seconds
 }
 
 type Config struct {

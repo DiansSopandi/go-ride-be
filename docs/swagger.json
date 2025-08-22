@@ -1,7 +1,9 @@
 {
     "swagger": "2.0",
     "info": {
-        "contact": {}
+        "title": "GoRide API",
+        "contact": {},
+        "version": "1.0"
     },
     "paths": {
         "/v1": {
@@ -14,6 +16,62 @@
                     "Root"
                 ],
                 "summary": "Root Endpoint",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/auth/google/callback": {
+            "get": {
+                "description": "Handles Google OAuth2 callback",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Google Callback",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/auth/google/login": {
+            "get": {
+                "description": "Initiates Google OAuth2 login",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Google Auth",
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -80,6 +138,23 @@
                 }
             }
         },
+        "/v1/auth/logout": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Logout a user",
+                "responses": {}
+            }
+        },
         "/v1/auth/register": {
             "post": {
                 "description": "Register a new user and assign roles if provided.",
@@ -130,6 +205,11 @@
         },
         "/v1/roles": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Get all roles",
                 "consumes": [
                     "application/json"
@@ -154,6 +234,11 @@
                 }
             },
             "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Create a new role",
                 "consumes": [
                     "application/json"
@@ -188,6 +273,11 @@
         },
         "/v1/users": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "This user route returns a simple JSON response",
                 "produces": [
                     "application/json"
@@ -214,6 +304,11 @@
                 }
             },
             "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "This user route returns a simple JSON response",
                 "produces": [
                     "application/json"
@@ -316,7 +411,10 @@
         "dto.UserLoginResponse": {
             "type": "object",
             "properties": {
-                "token": {
+                "access_token": {
+                    "type": "string"
+                },
+                "refresh_token": {
                     "type": "string"
                 },
                 "user": {
@@ -367,12 +465,6 @@
         "dto.UserResponse": {
             "type": "object",
             "properties": {
-                "createdAt": {
-                    "type": "string"
-                },
-                "deletedAt": {
-                    "type": "string"
-                },
                 "email": {
                     "type": "string"
                 },
@@ -384,9 +476,6 @@
                     "items": {
                         "type": "string"
                     }
-                },
-                "updatedAt": {
-                    "type": "string"
                 },
                 "username": {
                     "type": "string"
@@ -438,6 +527,18 @@
                 "password": {
                     "type": "string"
                 },
+                "picture": {
+                    "description": "URL to the user's profile picture",
+                    "type": "string"
+                },
+                "provider": {
+                    "description": "e.g., \"google\", \"local\"",
+                    "type": "string"
+                },
+                "provider_id": {
+                    "description": "ID from the provider (e.g., Google ID)",
+                    "type": "string"
+                },
                 "updated_at": {
                     "type": "string"
                 },
@@ -445,6 +546,14 @@
                     "type": "string"
                 }
             }
+        }
+    },
+    "securityDefinitions": {
+        "BearerAuth": {
+            "description": "Type \"Bearer\" followed by a space and JWT token.",
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header"
         }
     }
 }

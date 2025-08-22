@@ -25,7 +25,8 @@ func NewUserHandler() *UserHandler {
 	// userRepo, _ := repository.NewUserRepository(tx, false)
 	userRepo, _ := repository.NewUserRepository(tx)
 	roleRepo, _ := repository.NewRoleRepository(tx)
-	userService := service.NewUserService(userRepo, roleRepo)
+	userProviderRepo, _ := repository.NewUserProviderRepository(tx)
+	userService := service.NewUserService(userRepo, roleRepo, userProviderRepo)
 
 	return &UserHandler{
 		UserService: userService, // service.NewUserService(),
@@ -95,6 +96,7 @@ func GetUserHandler(handler *UserHandler) fiber.Handler {
 // @Tags User
 // @Produce json
 // @Param createUserDto body dto.UserCreateRequest true "Create User Request"
+// @Security BearerAuth
 // @Success 200 {object} map[string]interface{}
 // @Failure 500 {object} map[string]interface{}
 // @Router /v1/users [post]
@@ -105,8 +107,9 @@ func (h *UserHandler) CreateUser(c *fiber.Ctx, createUserDto *dto.UserCreateRequ
 	// userRepo, err := repository.NewUserRepository(tx, isTx)
 	userRepo, _ := repository.NewUserRepository(tx)
 	roleRepo, _ := repository.NewRoleRepository(tx)
+	userProviderRepo, _ := repository.NewUserProviderRepository(tx)
 
-	userServiceWithTx := service.NewUserService(userRepo, roleRepo)
+	userServiceWithTx := service.NewUserService(userRepo, roleRepo, userProviderRepo)
 
 	// userJson, err := json.MarshalIndent(createUserDto, "", "  ")
 	// fmt.Println(string(userJson))
@@ -152,6 +155,7 @@ func (h *UserHandler) CreateUser(c *fiber.Ctx, createUserDto *dto.UserCreateRequ
 // @Description This user route returns a simple JSON response
 // @Tags User
 // @Produce json
+// @Security BearerAuth
 // @Success 200 {object} map[string]interface{}
 // @Failure 500 {object} map[string]interface{}
 // @Router /v1/users [get]

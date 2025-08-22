@@ -77,6 +77,7 @@ func CreateRoleHandler(handler *RoleHandler) fiber.Handler {
 // @Tags Role
 // @Accept json
 // @Produce json
+// @Security BearerAuth
 // @Success 200 {array} models.Role
 // @Router /v1/roles [get]
 func (h *RoleHandler) GetAllRoles() ([]models.Role, error) {
@@ -90,6 +91,7 @@ func (h *RoleHandler) GetAllRoles() ([]models.Role, error) {
 // @Accept json
 // @Produce json
 // @Param roleDto body dto.RoleCreateRequest true "Create Role Request"
+// @Security BearerAuth
 // @Success 200 {object} models.Role
 // @Router /v1/roles [post]
 func (h *RoleHandler) CreateRole(c *fiber.Ctx, roleDto *dto.RoleCreateRequest) (models.Role, error) {

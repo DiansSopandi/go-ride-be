@@ -6,6 +6,13 @@ import (
 	_ "github.com/DiansSopandi/goride_be/docs"
 )
 
+// @title GoRide API
+// @version 1.0
+// @securityDefinitions.apikey BearerAuth
+// @in header
+// @name Authorization
+// @description Type "Bearer" followed by a space and JWT token.
+// @BasePath /v1
 func main() {
 	// Load environment variables
 	// pkg.LoadEnv()

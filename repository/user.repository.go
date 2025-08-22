@@ -73,7 +73,6 @@ func (r *UserRepository) GetUserByID(id int) (*models.User, error) {
 }
 
 func (r *UserRepository) GetUserByEmail(email string) (*models.User, error) {
-	// query := `SELECT id, username, email, password, avatar_url, avatar_name, first_name, last_name, phone, address, role, created_at, updated_at, deleted_at FROM users WHERE email = $1`
 	query := `SELECT id, username, email, password,  created_at, updated_at, deleted_at 
 	FROM users WHERE email = $1`
 
@@ -83,12 +82,6 @@ func (r *UserRepository) GetUserByEmail(email string) (*models.User, error) {
 		&user.Username,
 		&user.Email,
 		&user.Password,
-		// &user.AvatarUrl,
-		// &user.AvatarName,
-		// &user.FirstName,
-		// &user.LastName,
-		// &user.Phone,
-		// &user.Address,
 		&user.CreatedAt,
 		&user.UpdatedAt,
 		&user.DeletedAt,
@@ -106,7 +99,7 @@ func (r *UserRepository) GetUserByEmail(email string) (*models.User, error) {
 
 func (r *UserRepository) CreateUser(tx *sql.Tx, user *models.User) (models.User, error) {
 	// query := `INSERT INTO users (username, email, password, avatar_url, avatar_name, first_name, last_name, phone, address, role) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`
-	query := `INSERT INTO users (username, email, password) VALUES ($1, $2, $3) RETURNING id, username, email,  created_at, updated_at`
+	query := `INSERT INTO users (username, email, password, provider, provider_id, picture) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id, username, email, created_at, updated_at`
 
 	// err := r.DB.QueryRow(query,
 	// err := tx.QueryRow(query,
@@ -114,13 +107,16 @@ func (r *UserRepository) CreateUser(tx *sql.Tx, user *models.User) (models.User,
 		user.Username,
 		user.Email,
 		user.Password,
+		user.Provider,
+		user.ProviderID,
+		user.Picture,
 	).Scan(&user.ID, &user.Username, &user.Email, &user.CreatedAt, &user.UpdatedAt)
 
 	return *user, err
 }
 func (r *UserRepository) UpdateUser(tx *sql.Tx, user *models.User) error {
 	// query := `UPDATE users SET username = $1, email = $2, password = $3, avatar_url = $4, avatar_name = $5, first_name = $6, last_name = $7, phone = $8, address = $9, role = $10, updated_at = NOW() WHERE id = $11`
-	query := `UPDATE users SET username = $1, email = $2, password = $3,  updated_at = NOW() WHERE id = $11`
+	query := `UPDATE users SET username = $1, email = $2, password = $3, picture = $4, updated_at = NOW() WHERE id = $5`
 
 	_, err := tx.Exec(query,
 		user.Username,
@@ -132,6 +128,7 @@ func (r *UserRepository) UpdateUser(tx *sql.Tx, user *models.User) error {
 		// user.LastName,
 		// user.Phone,
 		// user.Address,
+		user.Picture,
 		user.ID,
 	)
 	return err
@@ -308,4 +305,26 @@ func (r *UserRepository) AssignRolesToUserWithTx(tx *sql.Tx, userID uint, roleID
 	}
 
 	return nil
+}
+
+func (r *UserRepository) FindByGoogleID(googleID string) (*models.User, error) {
+	var user models.User
+	query := `SELECT id, username, email, provider, provider_id, picture
+			  FROM users 
+			  WHERE provider = 'google' AND provider_id = $1 AND deleted_at IS NULL`
+	err := r.DB.QueryRow(query, googleID).Scan(
+		&user.ID,
+		&user.Username,
+		&user.Email,
+		&user.Provider,
+		&user.ProviderID,
+		&user.Picture,
+	)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return &user, nil
 }
