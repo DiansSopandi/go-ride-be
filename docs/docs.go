@@ -413,7 +413,7 @@ const docTemplate = `{
                 },
                 "password": {
                     "type": "string",
-                    "example": "Cilok99!@"
+                    "example": "Pass123!@"
                 }
             }
         },

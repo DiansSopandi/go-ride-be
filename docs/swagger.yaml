@@ -36,7 +36,7 @@ definitions:
         example: Q2Sb9@example.com
         type: string
       password:
-        example: Cilok99!@
+        example: Pass123!@
         type: string
     required:
     - email

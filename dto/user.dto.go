@@ -36,7 +36,7 @@ type UserUpdateRequest struct {
 
 type UserLoginRequest struct {
 	Email    string `json:"email" validate:"required,email" example:"Q2Sb9@example.com"`
-	Password string `json:"password" validate:"required" example:"Cilok99!@"`
+	Password string `json:"password" validate:"required" example:"Pass123!@"`
 }
 
 type UserResponse struct {

@@ -281,8 +281,30 @@ func LoginUserHandler(handler *AuthHandler) fiber.Handler {
 func LogoutUserHandler(handler *AuthHandler) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		// Clear cookies
-		c.ClearCookie("jwt_at", "/", "")
-		c.ClearCookie("jwt_rt", "/", "")
+		// c.ClearCookie("jwt_at", "/", "")
+		// c.ClearCookie("jwt_rt", "/", "")
+
+		expired := time.Now().Add(-time.Hour)
+
+		c.Cookie(&fiber.Cookie{
+			Name:     "jwt_at",
+			Value:    "",
+			Expires:  expired,
+			Path:     "/",
+			HTTPOnly: true,
+			Secure:   true,
+			SameSite: "Strict",
+		})
+
+		c.Cookie(&fiber.Cookie{
+			Name:     "jwt_rt",
+			Value:    "",
+			Expires:  expired,
+			Path:     "/",
+			HTTPOnly: true,
+			Secure:   true,
+			SameSite: "Strict",
+		})
 		return pkg.ResponseApiOK(c, "User logged out successfully", nil)
 	}
 }
@@ -374,22 +396,24 @@ func (h *AuthHandler) LoginUser(c *fiber.Ctx, loginDto dto.UserLoginRequest) (dt
 		Name:  "jwt_at",
 		Value: res.AccessToken,
 		// Expires:  time.Now().Add(15 * time.Minute),
-		Expires:  time.Now().Add(24 * time.Hour),
-		HTTPOnly: true,
-		Secure:   true,
-		SameSite: "Strict",
-		Path:     "/",
+		Expires:     time.Now().Add(24 * time.Hour),
+		HTTPOnly:    true,
+		Secure:      true,
+		SameSite:    "Strict",
+		Path:        "/",
+		SessionOnly: true,
 	})
 
 	// Set cookie Refresh Token
 	c.Cookie(&fiber.Cookie{
-		Name:     "jwt_rt",
-		Value:    res.RefreshToken,
-		Expires:  time.Now().Add(7 * 24 * time.Hour),
-		HTTPOnly: true,
-		Secure:   true,
-		SameSite: "Strict",
-		Path:     "/",
+		Name:        "jwt_rt",
+		Value:       res.RefreshToken,
+		Expires:     time.Now().Add(7 * 24 * time.Hour),
+		HTTPOnly:    true,
+		Secure:      true,
+		SameSite:    "Strict",
+		Path:        "/",
+		SessionOnly: true,
 	})
 
 	// Set Authorization header
